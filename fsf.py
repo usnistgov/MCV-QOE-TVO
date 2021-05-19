@@ -30,6 +30,7 @@ def fsf(tx_data, rx_data, fs=48E3):
     if delay_samples < 0:
         #raise ValueError('Negative delay detected.')
         warnings.warn('Negative delay detected. Setting delay to zero.')
+        delay_samples = 0
         
     if len(rx_data) < (len(tx_data) + delay_samples):
         rx_data = rx_data[delay_samples:]
@@ -85,17 +86,14 @@ def calc_slope(wav_data):
     
     num_bands = len(freq_set)
     
+    #TODO: Check if already a column vector (avoid transpose if so)
     wav_data = wav_data.T
     
     #TODO: Explore length of hamming window - see if length of window should be less than length of input wav data 
     win = signal.get_window('hamming', len(wav_data))
     #win_1 = signal.windows.hamming(len(wav_data))
-    win = win * wav_data
-    #win_3 = win_1 * wav_data
-   
-    #freq, pxx = signal.periodogram(wav_data, fs=48E3, window=win, nfft=fft_len, detrend=False, scaling='spectrum')
-    #win = win * wav_data
-    freq, pxx = signal.periodogram(win, fs=48E3, nfft=fft_len, scaling='spectrum')
+    wav_win = win * wav_data
+    freq, pxx = signal.periodogram(wav_win, fs=int(48E3), nfft=fft_len, scaling='spectrum')
     #freq, pxx = signal.periodogram(wav_data, fs=48E3, nfft=fft_len, detrend=False, scaling='spectrum')
      
     band_vals = np.zeros((num_bands))
