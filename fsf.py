@@ -2,7 +2,9 @@ import math
 import mcvqoe
 import numpy as np
 from scipy import signal
+from scipy.fft import fft
 import warnings
+import matplotlib.pyplot as plt
 
 def fsf(tx_data, rx_data, fs=48E3):
     """
@@ -87,21 +89,37 @@ def calc_slope(wav_data):
     num_bands = len(freq_set)
     
     #TODO: Check if already a column vector (avoid transpose if so)
-    wav_data = wav_data.T
+    if wav_data.shape != (len(wav_data), ):
+        wav_data = wav_data.T
     
     #TODO: Explore length of hamming window - see if length of window should be less than length of input wav data 
-    win = signal.get_window('hamming', len(wav_data))
-    #win_1 = signal.windows.hamming(len(wav_data))
+    #win = signal.get_window('hamming', len(wav_data))
+    win = signal.get_window('hann', len(wav_data))
+  
     wav_win = win * wav_data
-    freq, pxx = signal.periodogram(wav_win, fs=int(48E3), nfft=fft_len, scaling='spectrum')
-    #freq, pxx = signal.periodogram(wav_data, fs=48E3, nfft=fft_len, detrend=False, scaling='spectrum')
-     
+    
+    #TODO: Write a periodogram function
+    freq, pxx = signal.periodogram(wav_win, fs=int(48E3), nfft=fft_len,detrend=False, scaling='spectrum')
+    #freq, pxx = signal.periodogram(wav_data, fs=int(48E3), window=win, nfft=fft_len, detrend=False, scaling='spectrum')
+    
+    #DELETE WHEN FINISHED
+    scaled_pxx = 10*np.log10(pxx)
+    scaled_pxx = np.reshape(scaled_pxx, (len(scaled_pxx)))
+    plt.plot(freq, scaled_pxx)
+    plt.xlabel('Freq')
+    plt.ylabel('Pxx')
+    plt.xlim([250, 3500])
+    plt.show()
+    
     band_vals = np.zeros((num_bands))
     
     #TODO: Look into list comprehension 
     for band in range(num_bands):
         mask = np.logical_and((freq >= freq_set[band, 0]), (freq <= freq_set[band, 1]))
         band_vals[band] = 10 * math.log10(np.mean(pxx[mask]))
+    
+    # band = [10 * math.log10(np.mean(pxx[np.logical_and((freq >= freq_set[band, 0]), (freq <= freq_set[band, 1]))])) 
+    #         for band in num_bands]
             
     max_idx = np.argmax(band_vals[0:round(num_bands/2)])
         
@@ -117,6 +135,54 @@ def calc_slope(wav_data):
     return slope
     
 
+def periodogram(x, window, nfft, fs):
+    """
+    Purpose
+    -------
+    Periodogram implementation that mimics Octave's implementation (periodogram_simple).
 
+    Parameters
+    ----------
+    x : numpy array 
+        Input signal.
+    window : numpy array
+        Window. It must be the same length as the input signal.
+    nfft : int
+        Number of DFT points.
+    fs : int
+        Sample rate. It must be positive.
 
+    Returns
+    -------
+    None.
 
+    """
+    
+    n = len(x)
+    x = np.multiply(x, window)
+    
+    if n > nfft:
+        rr = len(x) % nfft
+        if rr != 0:
+            x = np.concatenate((x, np.zeros(nfft-rr)))
+        
+        x = np.sum(np.reshape(x, (nfft, (len(x) / nfft))), 1)
+    
+    n = np.sum(np.square(window))
+    
+    pxx = np.true_divide(np.square(np.abs(fft(x, nfft))), n)
+    pxx = np.true_divide(pxx, fs)
+    
+    if nfft % 2 == 0:
+        psd_len = (nfft / 2) + 1
+        pxx = pxx[:psd_len] + np.concatenate(0, pxx[nfft:psd_len:-1], 0)
+    else:
+        psd_len = (nfft + 1) / 2
+        pxx = pxx[:psd_len] + np.concatenate(0, pxx[nfft:psd_len:-1])
+    
+    freq = np.true_divide(np.arange(0, (nfft / 2)), nfft)
+    freq = freq * fs
+    
+    return pxx, freq
+     
+    
