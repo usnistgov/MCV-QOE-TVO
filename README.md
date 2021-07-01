@@ -49,19 +49,29 @@ Post-processing tool used to run an evaluation function on test data, such as ev
 
 
 ## eval_MRT.m 
-Used to measure ABC-MRT scores across evaluated volume levels.
-ABC-MRT16 calculations
+Used to perform ABC-MRT16 calculations across evaluated volume levels. This is used in either **volume_adjust** or **evalTest**. 
+
+### Example use case:
+evalTest('\\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.mat',eval_MRT(),'OneAtATime',false)
 
 ## model_gen 
+Used to generate an interpolant from the volume points in a .csv data file. Mod is an interpolant that gives FSF scores as a function of tranmit volume levels. Standard deviation is given at each volume level used to make mod.
 ### Example input specifications:
+[mod,std_dat]=model_gen(\\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.csv')
 
 ## maxTest 
-### Example input specifications:
+Runs the method, subclass of method_max, on the func func over the range, given by range. Returns the optimum transmit volume level. 
 
-eval_PESQ (think about this)*
-## maxmethod_check 
-plots interval values, opt points
 ### Example input specifications:
+[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod_FSF(q),[-40,0],'maxIttr',200,'noise', Noise,'Trials',40,'tol',1);
+
+## eval_PESQ (think about this)*
+
+## maxmethod_check 
+Take in a CSV of project data. Create a model from data. Run it through max_OptGrid, and get information about behavior. Output options include information on mean and standard deviation values of the data; plots of decisions across eval points; plots of the final optimal values with intervals; plots of the groups across eval points.
+
+### Example input specifications:
+MaxMethod_Check('Dat_Path', '\\cfs2w.nist.gov\671\Projects\MCV\Volume-test\Volume Impact Project\Fourth Phase Data - Updated CSVs\Analog Direct\Additional Data\capture_M4-extra_31-Dec-2020_10-44-42.csv', 'Tol',1, 'Noise', 0.02)
 
 
 ## volume_sort
