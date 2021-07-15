@@ -7,12 +7,16 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 - Paper available at:
 
 ## Hardware Requirements 
-- See **Link to paper and access time paper**
+- See **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
 ## Software Requirements
-- MATLAB R2018a or newer with the following toolboxes:
-	- Audio System Toolbox
+- MATLAB R2019a or newer with the following toolboxes:
+	- Audio System Toolbox (Audio Toolbox on R2019a and newer)
 	- Signal Processing Toolbox
+- R version 3.5.X or newer
+    - RStudio (recommended)
+	- ggplot2, minpack.lm packages (will install on accessTime package install)
+    - devtool package (must be installed via `install.packages("devtools")` )
 
 # Running TVO Tests
 The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
@@ -65,30 +69,38 @@ Runs the method, subclass of method_max, on the func func over the range, given 
 ### Example input specifications:
 [opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod_FSF(q),[-40,0],'maxIttr',200,'noise', Noise,'Trials',40,'tol',1);
 
-## eval_PESQ (think about this)*
 
 ## maxmethod_check 
 Take in a CSV of project data. Create a model from data. Run it through max_OptGrid, and get information about behavior. Output options include information on mean and standard deviation values of the data; plots of decisions across eval points; plots of the final optimal values with intervals; plots of the groups across eval points.
 
 ### Example input specifications:
-MaxMethod_Check('Dat_Path', '\\cfs2w.nist.gov\671\Projects\MCV\Volume-test\Volume Impact Project\Fourth Phase Data - Updated CSVs\Analog Direct\Additional Data\capture_M4-extra_31-Dec-2020_10-44-42.csv', 'Tol',1, 'Noise', 0.02)
+MaxMethod_Check('Dat_Path', '\directory\data\capture_M4-extra_31-Dec-2020_10-44-42.csv', 'Tol',2, 'Noise', 0.3)
 
-
-## volume_sort
-pesqwrapper (think about this)
 ## GroupPlotCheck 
+Read in CSV data files. Use model_gen to create models based on data. Run maxTest to get interval data. Plot the intervals found by the grouping method to see more details about the decision making process that leads to the final selected optimal interval. 
 
-## distortSim *
+### Example input specifications:
+GroupPlotCheck('CSV_dat', '\directory\data\Analog Direct\capture_M4-extra_31-Dec-2020_10-44-42.csv')
+
+## distortSim 
+Simulate volume optimization with noise and clipping. Run a distortion simulation with the audio files given by the cell array audioFiles. Noise is added to the audio file using noiseFunc and the audio is clipped with clipFunc. The optimization method optMethod which is a method_max. The audio is evaluated by a metric which must be a method_eval.
+
+### Example input specifications:
+distortSim(eval_FSF(),max_OptGrid(10),@noise_func1,@clip_mx0p04_s15,fullfile('\directory\Loud_20_Words',{'F1_Loud_Norm_DiffNeigh_VaryFill.wav','F3_Loud_Norm_DiffNeigh_VaryFill.wav','M3_Loud_Norm_DiffNeigh_VaryFill.wav','M4_Loud_Norm_DiffNeigh_VaryFill.wav'}),'tol',1)
 
 ## export_data2csv_M4
+Reads Volume Adjust .mat data files and creates a CSV. CSV files can be used for quick analysis in multiple software packages.
+
+### Example input specifications:
+export_data2csv_M4('Dat_Dir','\directory\Analog Direct','Dat_Name','capture_M4-Analog-Direct_01-Dec-2020_07-09-01')
 
 # TECHNICAL SUPPORT
-For more information or assistance on optimal volume measurements please contact:
-Chelsea Greene
-Public Safety Communications Research Division
-National Institute of Standards and Technology
-325 Broadway
-Boulder, CO 80305
+For more information or assistance on optimal transmit volume measurements please contact:
+Chelsea Greene\
+Public Safety Communications Research Division\
+National Institute of Standards and Technology\
+325 Broadway\
+Boulder, CO 80305\
 303-497-6852; Chelsea.Greene@nist.gov
 
 # Disclaimer
