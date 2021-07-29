@@ -2,8 +2,8 @@
 The purpose of this software is to find the optimal transmit volume for a push-to-talk (PTT) communications device for a system under test (SUT) using a transmit volume optimization (TVO) tool. TVO  should be performed for every combination of PTT device under test and every audio file used in performing Mission Critical Voice (MCV) quality of experience (QoE) measurements.  
 
 ## Obtaining Software
-- Code available at:
-- Data available at:
+- Code available at: https://github.com/usnistgov/MCV-QOE-TVO
+- Data available at: https://doi.org/10.18434/mds2-2432
 - Paper available at:
 
 ## Hardware Requirements 
