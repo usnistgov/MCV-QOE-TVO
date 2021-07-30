@@ -1,13 +1,13 @@
 # Summary
-The purpose of this software is to find the optimal transmit volume for a push-to-talk (PTT) communications device for a system under test (SUT) using a transmit volume optimization (TVO) tool. TVO  should be performed for every combination of PTT device under test and every audio file used in performing Mission Critical Voice (MCV) quality of experience (QoE) measurements.  
+The purpose of this software is to find the optimal transmit volume for a push-to-talk (PTT) communications device performing Mission Critical Voice (MCV) quality of experience (QoE) measurements using a transmit volume optimization (TVO) tool. TVO should be performed for every combination of PTT device under test and every audio file used in performing MCV QoE measurements.  
 
 ## Obtaining Software
 - Code available at: https://github.com/usnistgov/MCV-QOE-TVO
 - Data available at: https://doi.org/10.18434/mds2-2432
-- Paper available at:
+- Paper available at: https://doi.org/10.6028/NIST.TN.XXXX **To update**
 
 ## Hardware Requirements 
-- See **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
+- See https://doi.org/10.6028/NIST.TN.XXXX **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
 ## Software Requirements
 - MATLAB R2019a or newer with the following toolboxes:
@@ -18,7 +18,7 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 	- ggplot2, minpack.lm packages (will install on accessTime package install)
     - devtool package (must be installed via `install.packages("devtools")` )
 
-# Running TVO Tests
+# Running TVO 
 The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
 
 To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named data/. 
@@ -43,6 +43,7 @@ Audio files can be found in the 'clips' folder. By default, all four of these au
 
 # TECHNICAL SUPPORT
 For more information or assistance on optimal transmit volume measurements please contact:
+
 Chelsea Greene\
 Public Safety Communications Research Division\
 National Institute of Standards and Technology\
