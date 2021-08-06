@@ -4,10 +4,10 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 ## Obtaining Software
 - Code available at: https://github.com/usnistgov/MCV-QOE-TVO
 - Data available at: https://doi.org/10.18434/mds2-2432
-- Paper available at: https://doi.org/10.6028/NIST.TN.XXXX **To update**
+- Paper available at: https://doi.org/10.6028/NIST.TN.2171
 
 ## Hardware Requirements 
-- See https://doi.org/10.6028/NIST.TN.XXXX **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
+- See https://doi.org/10.6028/NIST.TN.2171 **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
 ## Software Requirements
 - MATLAB R2019a or newer with the following toolboxes:
