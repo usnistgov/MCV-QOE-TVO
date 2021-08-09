@@ -7,16 +7,15 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 - Paper available at: https://doi.org/10.6028/NIST.TN.2171
 
 ## Hardware Requirements 
-- See https://doi.org/10.6028/NIST.TN.2171 **Link to paper** and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
+- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
 ## Software Requirements
 - MATLAB R2019a or newer with the following toolboxes:
-	- Audio System Toolbox (Audio Toolbox on R2019a and newer)
+	- Audio Toolbox 
 	- Signal Processing Toolbox
 - R version 3.5.X or newer
     - RStudio (recommended)
-	- ggplot2, minpack.lm packages (will install on accessTime package install)
-    - devtool package (must be installed via `install.packages("devtools")` )
+	- ggpubr, dplyr, ggplot2, broom, tinytex packages 
 
 # Running TVO 
 The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
