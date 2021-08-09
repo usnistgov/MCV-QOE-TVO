@@ -1,11 +1,11 @@
 # Statistical Analysis
-The scripts in the Statistical Analysis folder contain the methods used to verify the measurement methods developed. They also describe the optimal weight selection and uncertainty calculations. 
+The scripts in the Statistical Analysis folder contain the algorithms used to verify the measurement methods developed. They also describe the optimal weight selection and uncertainty calculations. 
 
-In order to run this script, you may need to download the rtools library. This may be downloaded from:
+In order to run this script,  download the rtools library:
 
 	https://cran.r-project.org/bin/windows/Rtools/
 
-A further list of packages may need to be installed manually with 
+Additonal packages may need to be installed using the following command:
 	
 	packages <- c(
 		"ggpubr",
@@ -15,7 +15,7 @@ A further list of packages may need to be installed manually with
 		)
 	install.packages(packages)
 
-To compile the document using the R Markdown, you may need to use the tinytex package. This is acomplished with
+To compile the document using the R Markdown, the tinytex package may be needed. This is acomplished with the following commands:
 
 	install.packages('tinytex')
 	tinytex::install_tinytex()
