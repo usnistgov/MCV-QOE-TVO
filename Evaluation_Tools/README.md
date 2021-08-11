@@ -4,7 +4,8 @@ The scripts in **Evaluation_Tools** are used for users interested in further eva
 ## evalTest
 Post-processing tool used to run an evaluation function on test data, such as eval_FSF. This is useful for reviewing the FSF scores individually, not just the averages, and evaluating behavior. 
 ### Example input specifications:
-- To evaluate data and view/plot individual FSF scores: evalTest('\\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.mat',eval_FSF(),'OneAtATime',true)
+To evaluate data and view/plot individual FSF scores: \
+evalTest('\\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.mat',eval_FSF(),'OneAtATime',true)
 
 
 ## eval_MRT.m 
@@ -22,7 +23,12 @@ Used to generate an interpolant from the volume points in a .csv data file. Mod 
 Runs the method, subclass of method_max, on the func func over the range, given by range. Returns the optimum transmit volume level. 
 
 ### Example input specifications:
-[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod_FSF(q),[-40,0],'maxIttr',200,'noise', Noise,'Trials',40,'tol',1);
+Define the method: \
+mm=max_OptGrid; \
+Build the model: \
+[mod,std_dat]=model_gen('\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.csv'); \
+Run maxTest on the model: \
+[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod(q),[-40,0],'maxIttr',200,'noise', 0.2,'Trials',40,'tol',2);
 
 
 ## maxmethod_check 
