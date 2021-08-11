@@ -10,7 +10,9 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 Data is available at: https://doi.org/10.18434/mds2-2432
 
 ## Hardware Requirements 
-- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
+- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods, https://github.com/usnistgov/accessTime
+
+**Additional details and information can be found in the paper linked above.**
 
 ## Software Requirements
 - MATLAB R2019a or newer with the following toolboxes:
@@ -23,13 +25,13 @@ Data is available at: https://doi.org/10.18434/mds2-2432
 # Running TVO 
 The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
 
-To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named data/. 
+To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named *data/*. 
 
 volume_adjust.m takes in a variety of optional input paramaters. Default input may be used. Advanced users may be interested in specifying some input paraters. Parameters that may be customized include:
 - AudioFile: audio file to be used for performing tests.
 - Trials: Number of trials to run for each sample volume.
-- Volumes: Instead of using the algorithm to determine what volume levels to     sample,explicitly set the volume sample points. When this is given no optimal volume is calculated.
-- Lim:  Lim sets the volume limits to use for the test in dB. 
+- Volumes: Instead of using the algorithm to determine what volume levels to sample, explicitly set the volume sample points. When this is given no optimal volume is calculated.
+- Lim: Lim sets the volume limits to use for the test in dB. 
 - PTTGap: Time to pause after completing one trial and starting the next. This setting may need to change if one is using a SUT with broadband. 
 - tol: Tolerance value used to set minimum spacing between evaluated volume levels.
 
@@ -40,7 +42,7 @@ volume_adjust.m takes in a variety of optional input paramaters. Default input m
 There are additional scripts in the main directory. These are used to run the main componenents of the TVO. The folder *private* contains additional helper functions to run this measurement.
 
 # Audio Files
-Audio files can be found in the 'clips' folder. By default, all four of these audio files are used. The csv files with cutpoints, as well as the test wav files, are included. 
+Audio files can be found in the *clips* folder. By default, all four of these audio files are used. The csv files with cutpoints, as well as the test wav files, are included. 
 
 
 # TECHNICAL SUPPORT
@@ -51,7 +53,7 @@ Public Safety Communications Research Division\
 National Institute of Standards and Technology\
 325 Broadway\
 Boulder, CO 80305\
-303-497-6852; Chelsea.Greene@nist.gov
+303-497-6852; Chelsea.Greene@nist.gov or PSCR@PSCR.gov
 
 # Disclaimer
 **Much of the included software was developed by NIST employees, for that software the following disclaimer applies:**
