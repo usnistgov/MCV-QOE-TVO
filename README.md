@@ -6,6 +6,9 @@ The purpose of this software is to find the optimal transmit volume for a push-t
 - Data available at: https://doi.org/10.18434/mds2-2432
 - Paper available at: https://doi.org/10.6028/NIST.TN.2171
 
+## Obtaining Data 
+Data is available at: https://doi.org/10.18434/mds2-2432
+
 ## Hardware Requirements 
 - See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
