@@ -12,7 +12,10 @@ Additional scripts not mentioned in the README that live in the repository are h
 Data is available at: https://doi.org/10.18434/mds2-2432
 
 ## Hardware Requirements 
-- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods 
+See the following:
+- Optimal Transmit Volume Conditions for Mission Critical Voice Quality of Experience Measurement Systems
+  - https://doi.org/10.6028/NIST.TN.2171 
+- Mission Critical Voice QoE Access Time Measurement Methods 
   - https://github.com/usnistgov/accessTime
   - https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
