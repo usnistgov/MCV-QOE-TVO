@@ -1,6 +1,8 @@
 # Summary
 The purpose of this software is to find the optimal transmit volume for a push-to-talk (PTT) communications device performing Mission Critical Voice (MCV) quality of experience (QoE) measurements using a transmit volume optimization (TVO) tool. TVO should be performed for every combination of PTT device under test and every audio file used in performing MCV QoE measurements.  
 
+Additional scripts not mentioned in the README that live in the repository are helper functions utilized in the main scripts listed.
+
 ## Obtaining Software
 - Code available at: https://github.com/usnistgov/MCV-QOE-TVO
 - Data available at: https://doi.org/10.18434/mds2-2432
@@ -25,7 +27,7 @@ Data is available at: https://doi.org/10.18434/mds2-2432
 # Running TVO 
 The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
 
-To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named *data/*. 
+To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named *OutDir/data/*. 
 
 volume_adjust.m takes in a variety of optional input paramaters. Default input may be used. Advanced users may be interested in specifying some input paraters. Parameters that may be customized include:
 - AudioFile: audio file to be used for performing tests.

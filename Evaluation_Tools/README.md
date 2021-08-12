@@ -1,6 +1,8 @@
 # Additional Tools
 The scripts in **Evaluation_Tools** are used for users interested in further evaluating data. There are a variety of post-processing tools to view details of data, the TVO elements, and perform simulations.
 
+Additional scripts not mentioned in the README that live in the repository are helper functions utilized in the main scripts listed.
+
 ## evalTest
 Post-processing tool used to run an evaluation function on test data, such as eval_FSF. This is useful for reviewing the FSF scores individually, not just the averages, and evaluating behavior. 
 ### Example input specifications:
@@ -28,7 +30,7 @@ mm=max_OptGrid; \
 Build the model: \
 [mod,std_dat]=model_gen('\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.csv'); \
 Run maxTest on the model: \
-[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod(q),[-40,0],'maxIttr',200,'noise', 0.2,'Trials',40,'tol',2);
+[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod(q),[-40,0],'maxIttr',200,'noise', std_dat,'Trials',40,'tol',2);
 
 
 ## maxmethod_check 
