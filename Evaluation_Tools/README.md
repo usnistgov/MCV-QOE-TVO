@@ -30,7 +30,7 @@ mm=max_OptGrid; \
 Build the model: \
 [mod,std_dat]=model_gen('\directory\data\capture_M4-Analog-Direct_01-Dec-2020_07-09-01.csv'); \
 Run maxTest on the model: \
-[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod(q),[-40,0],'maxIttr',200,'noise', std_dat,'Trials',40,'tol',2);
+[opt,x,y,dat_idx, test_dat]=maxTest(mm,@(q)mod(q),[-40,0],'maxIttr',200,'noise', 0.2,'Trials',40,'tol',2);
 
 
 ## maxmethod_check 
