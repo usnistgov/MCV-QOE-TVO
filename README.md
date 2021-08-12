@@ -12,7 +12,9 @@ Additional scripts not mentioned in the README that live in the repository are h
 Data is available at: https://doi.org/10.18434/mds2-2432
 
 ## Hardware Requirements 
-- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods, https://github.com/usnistgov/accessTime
+- See https://doi.org/10.6028/NIST.TN.2171 and Mission Critical Voice QoE Access Time Measurement Methods 
+  - https://github.com/usnistgov/accessTime
+  - https://www.nist.gov/ctl/pscr/mission-critical-voice-qoe-access-time-measurement-methods
 
 **Additional details and information can be found in the paper linked above.**
 
@@ -33,7 +35,7 @@ volume_adjust.m takes in a variety of optional input paramaters. Default input m
 - AudioFile: audio file to be used for performing tests.
 - Trials: Number of trials to run for each sample volume.
 - Volumes: Instead of using the algorithm to determine what volume levels to sample, explicitly set the volume sample points. When this is given no optimal volume is calculated.
-- Lim: Lim sets the volume limits to use for the test in dB. 
+- Lim: Sets the volume limits to use for the test in dB. 
 - PTTGap: Time to pause after completing one trial and starting the next. This setting may need to change if one is using a SUT with broadband. 
 - tol: Tolerance value used to set minimum spacing between evaluated volume levels.
 
