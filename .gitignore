@@ -1,0 +1,9 @@
+__pycache__/*
+
+mcvqoe/tvo/version.py
+
+# Ignore python packaging items
+.eggs/
+build/
+dist/
+mcvqoe_tvo.egg-info/
