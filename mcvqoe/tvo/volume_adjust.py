@@ -8,6 +8,8 @@ import scipy.signal
 import signal
 import time
 
+import numpy as np
+
 from collections import namedtuple
 from fractions import Fraction
 from warnings import warn
@@ -29,8 +31,6 @@ class measure:
         Volume setting on the device. This tells VolumeAdjust what the output
         volume of the audio device is. This is taken into account when the
         scaling is done for the trials. Default is 0 dB.
-    eval_func : function or None
-        A function handle or method_eval class to use to compare trials.
     get_post_notes : function or None
         Function called to get notes at the end of the test. Often set to
         mcvqoe-post_test to get notes with a gui popup.
@@ -58,7 +58,7 @@ class measure:
         desired level. If this is False then the user will be prompted every time
         the volume needs to be changed. Defaults to True
     smax : int
-        Maximum number of sample vlumes to use. Default is 30.
+        Maximum number of sample volumes to use. Default is 30.
     tol : float
         Tolerance value. Used to set 'Opt.tol'.
     trials : int
@@ -90,7 +90,6 @@ class measure:
         self.audio_path = ""
         self.audio_interface = None
         self.dev_volume = 0.0
-        self.eval_function = None
         self.get_post_notes = None
         self.info = {'Test Type': 'default', 'Pre Test Notes': ''}
         self.lim = [-40.0, 0.0]
@@ -103,9 +102,12 @@ class measure:
         self.ri = None
         self.scaling = True
         self.smax = 30
+        # TODO: Add these to be functional
+        self.save_audio = True
+        self.save_tx_audio = True
         # TODO figure how tol ties into everything
         self.tol = 0.0
-        self.trials = 40
+        self.ptt_rep = 40
         self.volumes = []
         
         for k, v in kwargs.items():
@@ -168,7 +170,7 @@ class measure:
             
             # Set new grid, skipping repeats
             # TODO does this work?
-            self.grid = numpy.ma.masked_array(ng, mask=rpt)
+            self.grid = np.ma.masked_array(ng, mask=rpt)
         
         self.start_step = self.eval_step
         
@@ -322,7 +324,7 @@ class measure:
         
         for f in self.audio_files:
             # Make full path from relative paths
-            f_full = os.path.join(self.audio.path, f)
+            f_full = os.path.join(self.audio_path, f)
             # Load audio
             fs_file, audio_dat = mcvqoe.base.audio_read(f_full)
             # Check fs
@@ -453,7 +455,7 @@ class measure:
         eval_vals = []
         
         # Used to cycle between audiofiles
-        clipi = np.mod(range(self.trials), len(self.y))
+        clipi = np.mod(range(self.ptt_rep), len(self.y))
         
         # Variables
         opt = np.nan
@@ -493,7 +495,7 @@ class measure:
                 #-----------------[Arrays for Data Collection]------------------
                 
                 # Holds FSF values
-                eval_dat = [0.0 for i in range(self.trials)]
+                eval_dat = [0.0 for i in range(self.ptt_rep)]
                 
                 #------------------[Compute Next Sample Point]------------------
                 
@@ -501,13 +503,13 @@ class measure:
                 if not self.volumes:
                     if k == 0:
                         # Initial run initialization
-                        volume.append(opt_vol_pnt(new_eval=True))
+                        volume.append(self.opt_vol_pnt(new_eval=True))
                         # Can't be done before we start
                         done = False
                         
                     else:
                         # Process data and get next point
-                        new_vol, done = get_next(volume[k-1], eval_dat[k-1])
+                        new_vol, done = self.get_next(volume[k-1], eval_dat[k-1])
                         volume.append(new_vol)
                         
                     # TODO Check for convergence
@@ -577,7 +579,7 @@ class measure:
                     
                 #----------------------[Measurement Loop]-----------------------
                 
-                for kk in range(self.trials):
+                for kk in range(self.ptt_rep):
                     
                     #---------------------[Get Trial Timestamp]---------------------
                     
@@ -613,7 +615,7 @@ class measure:
                     #----------------[Volume Level Data Processing]-----------------
                 
                     # Call fsf method
-                    eval_dat[kk], csv_data['m2e_latency'] = fsf(rec_name, self.y[clipi[kk]])
+                    eval_dat[kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_name, self.y[clipi[kk]])
                                                                    
                     #------------------------[Write to CSV]-------------------------
                     
