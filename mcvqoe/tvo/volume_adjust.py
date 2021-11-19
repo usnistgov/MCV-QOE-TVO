@@ -415,16 +415,12 @@ class measure:
         clip_names = [os.path.basename(os.path.splitext(a)[0]) for a in self.audio_files]
         
         # Generate csv filenames and add path
-        # TODO change to single file as audio files are written into csv
-        self.data_filenames = []
-        temp_data_filenames = []
-        for name in clip_names:
-            file = f"{base_filename}_{name}.csv"
-            tmp_f = f"{base_filename}_{name}_TEMP.csv"
-            file = os.path.join(csv_data_dir, file)
-            tmp_f = os.path.join(csv_data_dir, tmp_f)
-            self.data_filenames.append(file)
-            temp_data_filenames.append(tmp_f)
+        file = f"{base_filename}.csv"
+        tmp_f = f"{base_filename}_TEMP.csv"
+        file = os.path.join(csv_data_dir, file)
+        tmp_f = os.path.join(csv_data_dir, tmp_f)
+        self.data_filename = file
+        temp_data_filename = tmp_f
             
         # Generate filename for bad csv data
         bad_name = f"{base_filename}_BAD.csv"
