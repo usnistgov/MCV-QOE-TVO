@@ -5,6 +5,7 @@ import mcvqoe.math
 import os
 import pkg_resources
 import scipy.signal
+import shutil
 import signal
 import time
 
@@ -45,9 +46,6 @@ class measure:
         Static property that is a tuple of property names that will not be added
         to the 'Arguments' field in the log. This should not be modified in most
         cases.
-    opt_method : method_max
-        A method_max class to use to determine which points to evalute next and,
-        at the end, return a value.
     outdir : string, default=''
         Base directory where data is stored
     ptt_gap : float
@@ -94,8 +92,6 @@ class measure:
         self.info = {'Test Type': 'default', 'Pre Test Notes': ''}
         self.lim = [-40.0, 0.0]
         self.no_log = ('test', 'ri')
-        # TODO figure out if I need a class for this one
-        self.opt_method = None
         self.outdir = ""
         self.ptt_gap = 3.1
         self.ptt_wait = 0.68
@@ -105,7 +101,6 @@ class measure:
         # TODO: Add these to be functional
         self.save_audio = True
         self.save_tx_audio = True
-        # TODO figure how tol ties into everything
         self.tol = 0.0
         self.ptt_rep = 40
         self.volumes = []
@@ -637,7 +632,15 @@ class measure:
                 opt = self.get_opt()
             else:
                 opt = np.nan
-                
+            
+            # -------------------------[Cleanup]----------------------------
+
+            # Copy temp file to final file
+            shutil.move(temp_data_filename, self.data_filename)
+      
+            # Turn off RI LED
+            self.ri.led(1, False)
+      
         finally:
             if self.get_post_notes:
                 # Get notes
