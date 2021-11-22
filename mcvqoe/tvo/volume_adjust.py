@@ -256,7 +256,7 @@ class measure:
         group_size = [len(i) for i in self.groups]
         # Check that we have groups and not individuals
         if np.amax(group_size) > 1:
-            print(f"Optimal interval: [{self.lim[0]}, {self.lim[1]}]")
+            print(f"Optimal interval: [{self.lim[0]}, {self.lim[1]}]", flush=True)
             # Set the opt value to be 4/5 of the way in the interval
             int_length = np.absolute(self.lim[0]-self.lim[1])
             opt = self.lim[0] + (int_length*(4/5))
@@ -463,7 +463,7 @@ class measure:
         # Only print assumed device volume if scaling is enabled
         if self.scaling:
             # Print assumed device volume for confirmation
-            print(f"\nAssuming device volume of {self.dev_volume} dB\n")
+            print(f"\nAssuming device volume of {self.dev_volume} dB\n", flush=True)
         
         # Turn on LED
         self.ri.led(1, True)
@@ -505,7 +505,7 @@ class measure:
                         
                     # TODO Check for convergence
                     if(done):
-                        print(f"Checked for convergence")
+                        print(f"Checked for convergence", flush=True)
                         
                 #------------------------[Skip Repeats]-------------------------
                 
@@ -520,7 +520,7 @@ class measure:
                         # If we have a value, extract it from NumPy array
                         id = idx[0]
                         print(f"\nRepeating volume of {volume[k]}, using volume from run {id}"+
-                              f" (vol = {volume[id]} skipping to next iteration...\n")
+                              f" (vol = {volume[id]} skipping to next iteration...\n", flush=True)
                         # Copy old values
                         eval_vals[k] = eval_vals[id]
                         eval_dat[k] = eval_dat[id]
@@ -534,7 +534,7 @@ class measure:
                 # Check if we are scaling or using device volume
                 if self.scaling:
                     # Print message with volume level
-                    print(f"\nScaling volume to {volume[k]} dB\n")
+                    print(f"\nScaling volume to {volume[k]} dB\n", flush=True)
                     
                     # Add volume to dictionary
                     csv_data['Volume'] = volume[k]
@@ -625,7 +625,7 @@ class measure:
                 eval_vals[k] = np.mean(eval_dat)
                 
                 # Print mean
-                print(f"\nEval method returned {eval_vals[k]}\n")
+                print(f"\nEval method returned {eval_vals[k]}\n", flush=True)
                 
             # Calculate optimal volume
             if not self.volumes:
