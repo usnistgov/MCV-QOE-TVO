@@ -173,9 +173,9 @@ class measure:
         """Return the next x-value to evaluate at"""
         
         # Check for empty grid
-        if self.grid:
+        if len(self.grid) > 0:
             # TODO Do I need to add 1 here like MATLAB?
-            return self.grid(self.eval_step-self.start_step)
+            return self.grid[self.eval_step-self.start_step]
         else:
             return np.nan
     
@@ -276,6 +276,10 @@ class measure:
             self.y_values = []
             self.x_values = []
             self.groups = []
+            self.setup_grid()
+            x_val = self.get_eval()
+            
+        return x_val
             
     def load_audio(self):
         """
@@ -513,19 +517,20 @@ class measure:
                 if not self.volumes:
                     # Check to see if we are evaluationg a value that has been done before
                     abs = np.absolute([((volume[k] - vol) < (self.tol/1000)) for vol in volume[0:k]])
-                    idx = np.argwhere(abs)[0]
+                    if abs.size > 0:
+                        idx = np.argwhere(abs)[0]
                     
-                    # Check if value was found
-                    if idx.size > 0:
-                        # If we have a value, extract it from NumPy array
-                        id = idx[0]
-                        print(f"\nRepeating volume of {volume[k]}, using volume from run {id}"+
-                              f" (vol = {volume[id]} skipping to next iteration...\n", flush=True)
-                        # Copy old values
-                        eval_vals[k] = eval_vals[id]
-                        eval_dat[k] = eval_dat[id]
-                        # Skip to next iteration
-                        continue
+                        # Check if value was found
+                        if idx.size > 0:
+                            # If we have a value, extract it from NumPy array
+                            id = idx[0]
+                            print(f"\nRepeating volume of {volume[k]}, using volume from run {id}"+
+                                  f" (vol = {volume[id]} skipping to next iteration...\n", flush=True)
+                            # Copy old values
+                            eval_vals[k] = eval_vals[id]
+                            eval_dat[k] = eval_dat[id]
+                            # Skip to next iteration
+                            continue
                     
                 #------------------------[Change Volume]------------------------
                 # Volume is changed by scaling the waveform or prompting the user
