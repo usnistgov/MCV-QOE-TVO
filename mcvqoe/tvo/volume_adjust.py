@@ -447,7 +447,7 @@ class measure:
         
         # Arrays
         volume = []
-        eval_vals = []
+        eval_vals = [0.0 for i in range(self.smax)]
         
         # Used to cycle between audiofiles
         clipi = np.mod(range(self.ptt_rep), len(self.y))
@@ -591,6 +591,7 @@ class measure:
                     
                     # Create audiofile name/path for recording
                     audioname = f"Rx{kk+1}_{self.audio_files[clipi[kk]]}.wav"
+                    audioname = os.path.join(wavdir, audioname)
                     
                     # Play and record audio data
                     rec_name = self.audio_interface.play_record(y_scl[clipi[kk]], audioname)
@@ -610,8 +611,11 @@ class measure:
                     
                     #----------------[Volume Level Data Processing]-----------------
                 
+                    # Load audio for processing
+                    _, rec_dat = mcvqoe.base.audio_read(audioname)
+                
                     # Call fsf method
-                    eval_dat[kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_name, self.y[clipi[kk]])
+                    eval_dat[kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_dat, self.y[clipi[kk]])
                                                                    
                     #------------------------[Write to CSV]-------------------------
                     
