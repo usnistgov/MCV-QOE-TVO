@@ -590,7 +590,7 @@ class measure:
                     time.sleep(self.ptt_wait)
                     
                     # Create audiofile name/path for recording
-                    audioname = f"Rx{kk+1}_{self.audiofiles[clipi[kk]]}.wav"
+                    audioname = f"Rx{kk+1}_{self.audio_files[clipi[kk]]}.wav"
                     
                     # Play and record audio data
                     rec_name = self.audio_interface.play_record(y_scl[clipi[kk]], audioname)
@@ -616,7 +616,7 @@ class measure:
                     #------------------------[Write to CSV]-------------------------
                     
                     # Place info inside Dictionary
-                    csv_data['Filename'] = self.audiofiles[clipi[kk]]
+                    csv_data['Filename'] = self.audio_files[clipi[kk]]
                     csv_data['Channels'] = mcvqoe.base.audio_channels_to_string(rec_name)
                     csv_data['FSF'] = eval_dat[kk]
                     
