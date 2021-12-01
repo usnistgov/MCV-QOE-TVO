@@ -196,8 +196,21 @@ class measure:
                     self.groups.append(k)
                 else:
                     found = 0
-                    for kk in range(0, len(self.groups)):
-                        if (mcvqoe.math.approx_permutation_test(self.y_values[k], self.y_values[self.groups[kk]])):
+                    for kk in range(len(self.groups)):
+                        
+                        # if/else for case of int when expecting a list of ints
+                        if isinstance(self.groups[kk], int):
+                            perm = [self.y_values[self.groups[kk]]]
+                        else:
+                            for i in range(len(self.groups[kk])):
+                                # Another if/else to be sure of list instance
+                                if isinstance(self.groups[kk][i], int):
+                                    perm = [self.y_values[self.groups[i]]]
+                                else:
+                                    perm = [self.y_values[k] for k in self.groups[kk][i]]
+                        
+                        # Perform permutation test with values from self.y_values
+                        if (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
                             self.groups[kk] = [self.groups[kk], k]
                             # Found! Done
                             found = 1
@@ -273,8 +286,8 @@ class measure:
             self.eval_step = 0
             self.win_found = False
             self.chosen_group = np.nan
-            self.y_values = []
-            self.x_values = []
+            self.y_values = [[] for i in range(self.smax)]
+            self.x_values = [[] for i in range(self.smax)]
             self.groups = []
             self.setup_grid()
             x_val = self.get_eval()
@@ -448,6 +461,7 @@ class measure:
         # Arrays
         volume = []
         eval_vals = [0.0 for i in range(self.smax)]
+        eval_dat = [[0.0 for j in range(self.ptt_rep)] for i in range(self.smax)]
         
         # Used to cycle between audiofiles
         clipi = np.mod(range(self.ptt_rep), len(self.y))
@@ -487,11 +501,6 @@ class measure:
                     
                 csv_data = {}
                 
-                #-----------------[Arrays for Data Collection]------------------
-                
-                # Holds FSF values
-                eval_dat = [0.0 for i in range(self.ptt_rep)]
-                
                 #------------------[Compute Next Sample Point]------------------
                 
                 # Check if volumes were given
@@ -515,20 +524,23 @@ class measure:
                 
                 # Check if volumes were given
                 if not self.volumes:
-                    # Check to see if we are evaluationg a value that has been done before
-                    abs = np.absolute([((volume[k] - vol) < (self.tol/1000)) for vol in volume[0:k]])
-                    if abs.size > 0:
-                        idx = np.argwhere(abs)[0]
-                    
+                    # Check to see if we are evaluating a value that has been done before
+                    abs = [(np.absolute(volume[k] - vol) < (self.tol/1000)) for vol in volume[0:k]]
+                    if len(abs) > 0:
+                        
+                        try:
+                            idx = next(x[0] for x in enumerate(abs) if x[1] == True)
+                        except StopIteration:
+                            idx = np.nan
+                            
                         # Check if value was found
-                        if idx.size > 0:
-                            # If we have a value, extract it from NumPy array
-                            id = idx[0]
-                            print(f"\nRepeating volume of {volume[k]}, using volume from run {id}"+
-                                  f" (vol = {volume[id]} skipping to next iteration...\n", flush=True)
+                        if not np.isnan(idx):
+
+                            print(f"\nRepeating volume of {volume[k]}, using volume from run {idx}"+
+                                  f" (vol = {volume[idx]} skipping to next iteration...\n", flush=True)
                             # Copy old values
-                            eval_vals[k] = eval_vals[id]
-                            eval_dat[k] = eval_dat[id]
+                            eval_vals[k] = eval_vals[idx]
+                            eval_dat[k] = eval_dat[idx]
                             # Skip to next iteration
                             continue
                     
@@ -590,7 +602,7 @@ class measure:
                     time.sleep(self.ptt_wait)
                     
                     # Create audiofile name/path for recording
-                    audioname = f"Rx{kk+1}_{self.audio_files[clipi[kk]]}.wav"
+                    audioname = f"Rx{(k*self.ptt_rep)+(kk+1)}_{self.audio_files[clipi[kk]]}"
                     audioname = os.path.join(wavdir, audioname)
                     
                     # Play and record audio data
@@ -615,14 +627,14 @@ class measure:
                     _, rec_dat = mcvqoe.base.audio_read(audioname)
                 
                     # Call fsf method
-                    eval_dat[kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_dat, self.y[clipi[kk]])
+                    eval_dat[k][kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_dat, self.y[clipi[kk]])
                                                                    
                     #------------------------[Write to CSV]-------------------------
                     
                     # Place info inside Dictionary
                     csv_data['Filename'] = self.audio_files[clipi[kk]]
                     csv_data['Channels'] = mcvqoe.base.audio_channels_to_string(rec_name)
-                    csv_data['FSF'] = eval_dat[kk]
+                    csv_data['FSF'] = eval_dat[k][kk]
                     
                     # Write to CSV
                     with open(temp_data_filename, "at") as f:
@@ -631,7 +643,7 @@ class measure:
                         )
                     
                 # Compute mean of FSF values                                          
-                eval_vals[k] = np.mean(eval_dat)
+                eval_vals[k] = np.mean(eval_dat[k])
                 
                 # Print mean
                 print(f"\nEval method returned {eval_vals[k]}\n", flush=True)
