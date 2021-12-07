@@ -159,7 +159,7 @@ class measure:
             rpt = np.zeros((len(ng)), dtype='bool')
             # Find repeat points
             for k in range(len(ng)):
-                # Consider 2 points the smae if they are closer than 1
+                # Consider 2 points the same if they are closer than 1
                 # 100th of the spacing. We're getting rounding errors otherwise
                 rpt[k] = np.any(np.abs(ng[k]-self.x_values) < np.true_divide(self.spacing, 100))
             
@@ -181,9 +181,7 @@ class measure:
     
     def get_next(self, eval_x, y_vals):
         """Get the next x value to evaluate at based on new data"""
-        
-        # Set to next step
-        self.eval_step = self.eval_step + 1
+
         # Save data with dither noise
         self.y_values[self.eval_step] = y_vals + np.random.normal(0, 0.5, len(y_vals))
         self.x_values[self.eval_step] = eval_x
@@ -202,26 +200,27 @@ class measure:
                         if isinstance(self.groups[kk], int):
                             perm = [self.y_values[self.groups[kk]]]
                         else:
-                            for i in range(len(self.groups[kk])):
-                                # Another if/else to be sure of list instance
-                                if isinstance(self.groups[kk][i], int):
-                                    perm = [self.y_values[self.groups[i]]]
-                                else:
-                                    perm = [self.y_values[k] for k in self.groups[kk][i]]
-                        
+                            perm = [self.y_values[k] for k in self.groups[kk]]
+                        perm = perm[0].flatten()
                         # Perform permutation test with values from self.y_values
                         if (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
-                            self.groups[kk] = [self.groups[kk], k]
+                            self.groups[kk].append(k)
                             # Found! Done
                             found = 1
                             break
-                    
+
                     if not found:
                         # Not found, add new group
                         self.groups.append(k)
                         
             # Get group length
-            group_size = [len(i) for i in self.groups]
+            group_size = []
+            for i in range(len(self.groups)):
+                if isinstance(self.groups[i], int):
+                    group_size.append(1)
+                else:
+                    group_size.append(len(self.groups[i]))
+
             mean_y = np.zeros(len(group_size))
             
             for k in range(len(self.groups)):
@@ -256,6 +255,9 @@ class measure:
         # Get next eval point
         x_val = self.get_eval()
         
+#         if self.eval_step == 0:
+        self.eval_step = self.eval_step + 1
+        
         return x_val, done
     
     def get_opt(self):
@@ -287,7 +289,7 @@ class measure:
             self.win_found = False
             self.chosen_group = np.nan
             self.y_values = [[] for i in range(self.smax)]
-            self.x_values = [[] for i in range(self.smax)]
+            self.x_values = np.asarray([np.nan for i in range(self.smax)])
             self.groups = []
             self.setup_grid()
             x_val = self.get_eval()
@@ -625,10 +627,15 @@ class measure:
                 
                     # Load audio for processing
                     _, rec_dat = mcvqoe.base.audio_read(audioname)
+                    rec_dat = mcvqoe.base.audio_float(rec_dat)
                 
                     # Call fsf method
-                    eval_dat[k][kk], csv_data['m2e_latency'] = mcvqoe.base.fsf(rec_dat, self.y[clipi[kk]])
-                                                                   
+                    eval_dat[k][kk], dly = mcvqoe.base.fsf(self.y[clipi[kk]], rec_dat)
+                    
+                    #-----------------------[Calculate M2E]-------------------------
+                    
+                    csv_data['m2e_latency'] = np.true_divide(dly, self.audio_interface.sample_rate)
+                                               
                     #------------------------[Write to CSV]-------------------------
                     
                     # Place info inside Dictionary
@@ -670,4 +677,3 @@ class measure:
                 info = {}
             
             mcvqoe.base.write_log.post(outdir=self.outdir, info=info)
-                
