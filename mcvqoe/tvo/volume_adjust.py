@@ -191,19 +191,16 @@ class measure:
             
             for k in range(self.start_step, self.eval_step):
                 if not (self.groups):
-                    self.groups.append(k)
+                    self.groups.append([k])
                 else:
                     found = 0
                     for kk in range(len(self.groups)):
                         
-                        # if/else for case of int when expecting a list of ints
-                        if isinstance(self.groups[kk], int):
-                            perm = [self.y_values[self.groups[kk]]]
-                        else:
-                            perm = [self.y_values[k] for k in self.groups[kk]]
+                        # Gather all y_values to be tested
+                        perm = [self.y_values[k] for k in self.groups[kk]]
                         perm = perm[0].flatten()
                         # Perform permutation test with values from self.y_values
-                        if (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
+                        if not (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
                             self.groups[kk].append(k)
                             # Found! Done
                             found = 1
@@ -211,21 +208,17 @@ class measure:
 
                     if not found:
                         # Not found, add new group
-                        self.groups.append(k)
+                        self.groups.append([k])
                         
             # Get group length
-            group_size = []
-            for i in range(len(self.groups)):
-                if isinstance(self.groups[i], int):
-                    group_size.append(1)
-                else:
-                    group_size.append(len(self.groups[i]))
+            group_size = [len(i) for i in self.groups]
 
             mean_y = np.zeros(len(group_size))
             
             for k in range(len(self.groups)):
                 # Compute the mean of y-values
-                mean_y[k] = np.mean(self.y_values[self.groups[k]])
+                y_val_group = [self.y_values[i] for i in self.groups[k]]
+                mean_y[k] = np.mean(y_val_group)
                 
             g_score = np.multiply(mean_y, group_size)
             
@@ -660,6 +653,8 @@ class measure:
                 opt = self.get_opt()
             else:
                 opt = np.nan
+            
+            print(f"\n\nOptimal volume = {opt} dB\n\n", flush=True)
             
             # -------------------------[Cleanup]----------------------------
 
