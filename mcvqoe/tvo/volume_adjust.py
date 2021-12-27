@@ -358,11 +358,14 @@ class measure:
             fne, _ = os.path.splitext(f_full)
             # Add .csv extension
             fcsv = fne + '.csv'
-            # Load cutpoints
-            cp = mcvqoe.base.load_cp(fcsv)
             
-            # Add cutpoints to array
-            self.cutpoints.append(cp)
+            try:
+                # Load cutpoints
+                cp = mcvqoe.base.load_cp(fcsv)
+                # Add cutpoints to array
+                self.cutpoints.append(cp)
+            except FileNotFoundError:
+                print(f"\nNo .csv file found for {fne}\n", flush=True)
             
         # Check if we have an audio interface (running actual test)
         if not self.audio_interface:
@@ -505,7 +508,6 @@ class measure:
                         volume.append(self.opt_vol_pnt(new_eval=True))
                         # Can't be done before we start
                         done = False
-                        
                     else:
                         # Process data and get next point
                         new_vol, done = self.get_next(volume[k-1], eval_dat[k-1])
@@ -520,7 +522,7 @@ class measure:
                 # Check if volumes were given
                 if not self.volumes:
                     # Check to see if we are evaluating a value that has been done before
-                    abs = [(np.absolute(volume[k] - vol) < (self.tol/1000)) for vol in volume[0:k]]
+                    abs = [(np.absolute(volume[k] - vol) == (self.tol/1000)) for vol in volume[0:k]]
                     if len(abs) > 0:
                         
                         try:
@@ -532,7 +534,7 @@ class measure:
                         if not np.isnan(idx):
 
                             print(f"\nRepeating volume of {volume[k]}, using volume from run {idx}"+
-                                  f" (vol = {volume[idx]} skipping to next iteration...\n", flush=True)
+                                  f" (vol = {volume[idx]}) skipping to next iteration...\n", flush=True)
                             # Copy old values
                             eval_vals[k] = eval_vals[idx]
                             eval_dat[k] = eval_dat[idx]
@@ -581,7 +583,7 @@ class measure:
                     self.ri.led(2, False)
                     
                 #----------------------[Measurement Loop]-----------------------
-                
+
                 for kk in range(self.ptt_rep):
                     
                     #---------------------[Get Trial Timestamp]---------------------
