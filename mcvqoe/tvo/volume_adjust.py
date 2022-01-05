@@ -195,7 +195,6 @@ class measure:
                 else:
                     found = 0
                     for kk in range(len(self.groups)):
-                        
                         # Gather all y_values to be tested
                         perm = [self.y_values[k] for k in self.groups[kk]]
                         perm = perm[0].flatten()
@@ -248,7 +247,6 @@ class measure:
         # Get next eval point
         x_val = self.get_eval()
         
-#         if self.eval_step == 0:
         self.eval_step = self.eval_step + 1
         
         return x_val, done
@@ -444,6 +442,14 @@ class measure:
         
         if not hasattr(self, "y"):
             self.load_audio()
+        
+        #-------------------[Add Tx Audio to WAV Dir]-------------------
+        
+        if self.save_tx_audio and self.save_audio:
+            # Write out Tx clips to files
+            for dat, name in zip(self.y, clip_names):
+                out_name = os.path.join(wavdir, f"Tx_{name}")
+                mcvqoe.base.audio_write(out_name + ".wav", int(self.audio_interface.sample_rate), dat)
         
         #-------------------[Get Max Number of Loops]-------------------
         
