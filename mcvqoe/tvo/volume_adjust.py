@@ -5,7 +5,6 @@ import mcvqoe.math
 import os
 import pkg_resources
 import scipy.signal
-import shutil
 import signal
 import time
 
@@ -183,7 +182,7 @@ class measure:
         """Get the next x value to evaluate at based on new data"""
 
         # Save data with dither noise
-        self.y_values[self.eval_step] = y_vals + np.random.normal(0, 0.5, len(y_vals))
+        self.y_values[self.eval_step] = y_vals + np.random.normal(0, 0.05, len(y_vals))
         self.x_values[self.eval_step] = eval_x
         
         # Check if we need a new grid
@@ -640,7 +639,8 @@ class measure:
                     #------------------------[Write to CSV]-------------------------
                     
                     # Place info inside Dictionary
-                    csv_data['Filename'] = self.audio_files[clipi[kk]]
+                    suffix_removed = self.audio_files[clipi[kk]].removesuffix('.wav')
+                    csv_data['Filename'] = suffix_removed
                     csv_data['Channels'] = mcvqoe.base.audio_channels_to_string(rec_name)
                     csv_data['FSF'] = eval_dat[k][kk]
                     
@@ -666,9 +666,15 @@ class measure:
             
             # -------------------------[Cleanup]----------------------------
 
-            # Copy temp file to final file
-            shutil.move(temp_data_filename, self.data_filename)
-      
+            # Copy temp file to final file and add optimal findings
+            # shutil.move(temp_data_filename, self.data_filename)
+            with open(self.data_filename, "w") as f:
+                writer = csv.writer(f, lineterminator='\n')
+                writer.writerow(['Optimal Interval:', f"[{self.lim[0]}, {self.lim[1]}]"])
+                writer.writerow(["Optimal Volume:", f"{opt}"])
+                for row in csv.reader(open(temp_data_filename, 'r')):
+                    writer.writerow(row)
+                    
             # Turn off RI LED
             self.ri.led(1, False)
       
