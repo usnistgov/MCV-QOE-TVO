@@ -199,15 +199,22 @@ class evaluate():
                            name='Average FSF',
                            )
                 )
-        # fig.update_layout(legend=dict(
-        #     yanchor="bottom",
-        #     y=0.99,
-        #     xanchor="left",
-        #     x=0.01,
-        #     ),
-        #     legend_orientation="h",
-        #     showlegend=False,
-        # )
+            delta = 0.1
+            dmax = df['FSF'].values.max() + delta
+            dmin = df['FSF'].values.min() - delta
+            
+            line_types = ['dash', 'dot', 'dot']
+            for key, ddash in zip(self.optimal.columns, line_types):
+                fig.add_trace(
+                    go.Scatter(
+                        x=[self.optimal.loc[0, key], self.optimal.loc[0, key]],
+                        y=[dmin, dmax],
+                        mode='lines',
+                        line=dict(color='black', width=3, dash=ddash),
+                        name=key,
+                        )
+                    )
+
         return fig
 
 
