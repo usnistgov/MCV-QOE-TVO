@@ -538,8 +538,8 @@ class measure:
                         # Check if value was found
                         if not np.isnan(idx):
 
-                            print(f"\nRepeating volume of {volume[k]}, using volume from run {idx}"+
-                                  f" (vol = {volume[idx]}) skipping to next iteration...\n", flush=True)
+                            print(f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
+                                  f" skipping to next iteration...\n", flush=True)
                             # Copy old values
                             eval_vals[k] = eval_vals[idx]
                             eval_dat[k] = eval_dat[idx]
@@ -667,14 +667,16 @@ class measure:
             # -------------------------[Cleanup]----------------------------
 
             # Copy temp file to final file and add optimal findings
-            # shutil.move(temp_data_filename, self.data_filename)
             with open(self.data_filename, "w") as f:
                 writer = csv.writer(f, lineterminator='\n')
-                writer.writerow(['Optimal Interval:', f"[{self.lim[0]}, {self.lim[1]}]"])
-                writer.writerow(["Optimal Volume:", f"{opt}"])
+                writer.writerow(['Optimum [dB]', 'Lower_Interval [dB]', 'Upper_Interval [dB]'])
+                writer.writerow([opt, self.lim[0], self.lim[1]])
                 for row in csv.reader(open(temp_data_filename, 'r')):
                     writer.writerow(row)
-                    
+            
+            # Delete our temporary csv file
+            os.remove(temp_data_filename)
+            
             # Turn off RI LED
             self.ri.led(1, False)
       
