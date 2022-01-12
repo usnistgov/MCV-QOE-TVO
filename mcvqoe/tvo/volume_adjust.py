@@ -83,7 +83,20 @@ class measure:
     
     def __init__(self, **kwargs):
         
-        self.audio_files = []
+        self.audio_files = [
+            pkg_resources.resource_filename(
+                "mcvqoe.tvo", "audio_clips/Vol_Set_F1.wav"
+                ),
+            pkg_resources.resource_filename(
+                "mcvqoe.tvo", "audio_clips/Vol_Set_F3.wav"
+                ),
+            pkg_resources.resource_filename(
+                "mcvqoe.tvo", "audio_clips/Vol_Set_M3.wav"
+                ),
+            pkg_resources.resource_filename(
+                "mcvqoe.tvo", "audio_clips/Vol_Set_M4.wav"
+                )
+            ]
         self.audio_path = ""
         self.audio_interface = None
         self.dev_volume = 0.0
@@ -374,7 +387,7 @@ class measure:
     def run(self):
         
         """Run a volume adjust test"""
-        
+
         #------------------[List Vars to Save in File]------------------
         
         save_vars = ('p', 'git_status', 'y', 'dev_name', 'test_dat',
@@ -479,8 +492,7 @@ class measure:
         else:
             max_dat = []
         #--------------------[Notify User of Start]---------------------
-        
-        
+
         # Only print assumed device volume if scaling is enabled
         if self.scaling:
             # Print assumed device volume for confirmation
@@ -688,3 +700,21 @@ class measure:
                 info = {}
             
             mcvqoe.base.write_log.post(outdir=self.outdir, info=info)
+            
+    @staticmethod
+    def included_audio_path():
+        """
+        Return path where audio files included in the package are stored.
+        
+        Returns
+        -------
+        audio_path : str
+        Paths to included audio files
+
+        """
+        
+        audio_path = pkg_resources.resource_filename(
+            'mcvqoe.tvo', 'audio_clips'
+            )
+        
+        return audio_path
