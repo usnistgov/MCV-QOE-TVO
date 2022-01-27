@@ -136,10 +136,10 @@ class evaluate():
         if isinstance(json_data, str):
             json_data = json.loads(json_data)
         # Extract data, cps, and test_info from json_data
-        data = pd.read_json(json_data['data'])
+        data = pd.read_json(json_data['measurement'])
         optimum = pd.read_json(json_data['optimal'])
         
-        filename = json_data['test_name']
+        filename = set(json_data['test_info'].keys())
         
         return filename, optimum, data
         
@@ -157,10 +157,12 @@ class evaluate():
         None.
 
         """
+        
+        test_info = {self.test_name: None}
         out_json = {
-            'data': self.data.to_json(),
+            'measurement': self.data.to_json(),
             'optimal': self.optimal.to_json(),
-            'test_name': self.test_name,
+            'test_info': test_info,
                 }
         
         # Final json representation of all data
