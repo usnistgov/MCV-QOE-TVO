@@ -181,12 +181,12 @@ class evaluate():
         # Filter by talkers if given
         # Filter by talkers if given
         if talkers is not None:
-            df_filt = pd.DataFrame()
+            df_filt = []
             if isinstance(talkers, str):
                 talkers = [talkers]
             for talker in talkers:
-                df_filt = df_filt.append(df[df['Filename'] == talker])
-            df = df_filt
+                df_filt.append(df[df['Filename'] == talker])
+            df = pd.concat(df_filt)
             
 
         fig = px.scatter(df, x=x, y='FSF',
