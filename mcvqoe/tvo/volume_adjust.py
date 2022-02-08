@@ -5,7 +5,6 @@ import mcvqoe.math
 import os
 import pkg_resources
 import scipy.signal
-import signal
 import time
 
 import numpy as np
@@ -113,7 +112,7 @@ class measure:
         # TODO: Add these to be functional
         self.save_audio = True
         self.save_tx_audio = True
-        self.tol = 0.0
+        self.tol = 1.0
         self.ptt_rep = 40
         self.volumes = []
         
@@ -205,16 +204,19 @@ class measure:
                 if not (self.groups):
                     self.groups.append([k])
                 else:
-                    found = 0
+                    found = False
                     for kk in range(len(self.groups)):
+                        print(f"self.groups[kk]: {self.groups[kk]}", flush=True)
+                        print(f"self.y_values: {self.y_values}", flush=True)
                         # Gather all y_values to be tested
                         perm = [self.y_values[k] for k in self.groups[kk]]
+                        print(f"FINAL RESULT: {perm}", flush=True)
                         perm = perm[0].flatten()
                         # Perform permutation test with values from self.y_values
                         if not (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
                             self.groups[kk].append(k)
                             # Found! Done
-                            found = 1
+                            found = True
                             break
 
                     if not found:
@@ -280,7 +282,7 @@ class measure:
             opt = self.lim[0] + (int_length*(4/5))
             return opt
         else:
-            warn(f"No groups formed. Optimal interval not found.")
+            warn("No groups formed. Optimal interval not found.")
             return np.nan
     
     def opt_vol_pnt(self, new_eval=False):
@@ -390,9 +392,10 @@ class measure:
 
         #------------------[List Vars to Save in File]------------------
         
-        save_vars = ('p', 'git_status', 'y', 'dev_name', 'test_dat',
-                     'fs', 'opt', 'vol_scl_en', 'clipi', 'cutpoints',
-                     'method')
+        # TODO: Do we want to save our progress in case of error?
+        # save_vars = ('p', 'git_status', 'y', 'dev_name', 'test_dat',
+        #              'fs', 'opt', 'vol_scl_en', 'clipi', 'cutpoints',
+        #              'method')
         
         #--------------[Check for Correct Audio Channels]---------------
         
@@ -489,8 +492,7 @@ class measure:
         # Setup for Optimization Method
         if self.volumes:
             volume = self.volumes
-        else:
-            max_dat = []
+
         #--------------------[Notify User of Start]---------------------
 
         # Only print assumed device volume if scaling is enabled
@@ -532,14 +534,15 @@ class measure:
                         
                     # TODO Check for convergence
                     if(done):
-                        print(f"Checked for convergence", flush=True)
+                        print("Checked for convergence", flush=True)
                         
                 #------------------------[Skip Repeats]-------------------------
                 
                 # Check if volumes were given
                 if not self.volumes:
                     # Check to see if we are evaluating a value that has been done before
-                    abs = [(np.absolute(volume[k] - vol) == (self.tol/1000)) for vol in volume[0:k]]
+                    # abs = [(np.absolute(volume[k] - vol) == (self.tol/1000)) for vol in volume[0:k]]
+                    abs = [(np.absolute(volume[k] - vol) < self.tol) for vol in volume[0:k]]
                     if len(abs) > 0:
                         
                         try:
@@ -551,7 +554,7 @@ class measure:
                         if not np.isnan(idx):
 
                             print(f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
-                                  f" skipping to next iteration...\n", flush=True)
+                                 " skipping to next iteration...\n", flush=True)
                             # Copy old values
                             eval_vals[k] = eval_vals[idx]
                             eval_dat[k] = eval_dat[idx]
