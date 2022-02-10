@@ -194,6 +194,7 @@ class evaluate():
                           title=title,
                           )
         if x == 'Volume':
+            # Plot average volumes
             vol_means = df.groupby('Volume', as_index=False)['FSF'].mean()
             fig.add_trace(
                 go.Scatter(x=vol_means['Volume'],
@@ -201,6 +202,23 @@ class evaluate():
                            name='Average FSF',
                            )
                 )
+            
+            # Label volume order
+            vol_ixs = df.groupby('Volume').indices
+            for vol, ix in vol_ixs.items():
+                ix_order = int(np.floor(ix[0]/ len(ix)) + 1)
+                # import pdb; pdb.set_trace()
+                vfsf = vol_means[vol_means['Volume'] == vol].iloc[0]['FSF']
+                vtext = f'Order:\n{ix_order}'
+                # vtext = ix_order
+
+                fig.add_annotation(
+                    x=vol,
+                    y=vfsf,
+                    text=vtext,
+                    showarrow=True,
+                    )
+            # Plot interval
             delta = 0.1
             dmax = df['FSF'].values.max() + delta
             dmin = df['FSF'].values.min() - delta
