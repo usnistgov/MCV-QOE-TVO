@@ -175,7 +175,6 @@ class measure:
                 rpt[k] = np.any(np.abs(ng[k]-self.x_values) < np.true_divide(self.spacing, 100))
             
             # Set new grid, skipping repeats
-            # TODO does this work?
             self.grid = np.ma.masked_array(ng, mask=rpt)
         
         self.start_step = self.eval_step
@@ -206,11 +205,10 @@ class measure:
                 else:
                     found = False
                     for kk in range(len(self.groups)):
-                        print(f"self.groups[kk]: {self.groups[kk]}", flush=True)
-                        print(f"self.y_values: {self.y_values}", flush=True)
+
                         # Gather all y_values to be tested
                         perm = [self.y_values[k] for k in self.groups[kk]]
-                        print(f"FINAL RESULT: {perm}", flush=True)
+
                         perm = perm[0].flatten()
                         # Perform permutation test with values from self.y_values
                         if not (mcvqoe.math.approx_permutation_test(self.y_values[k], perm)):
