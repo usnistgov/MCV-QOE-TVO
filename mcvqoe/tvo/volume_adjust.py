@@ -11,6 +11,7 @@ import numpy as np
 
 from collections import namedtuple
 from fractions import Fraction
+from mcvqoe.base.terminal_user import terminal_progress_update
 from warnings import warn
 
 class measure:
@@ -104,6 +105,7 @@ class measure:
         self.lim = [-40.0, 0.0]
         self.no_log = ('test', 'ri')
         self.outdir = ""
+        self.progress_update = terminal_progress_update
         self.ptt_gap = 3.1
         self.ptt_wait = 0.68
         self.ri = None
@@ -274,7 +276,12 @@ class measure:
         group_size = [len(i) for i in self.groups]
         # Check that we have groups and not individuals
         if np.amax(group_size) > 1:
-            print(f"Optimal interval: [{self.lim[0]}, {self.lim[1]}]", flush=True)
+            self.progress_update(
+                'status',
+                0,
+                0,
+                msg=f"Optimal interval: [{self.lim[0]}, {self.lim[1]}]",
+                )
             # Set the opt value to be 4/5 of the way in the interval
             int_length = np.absolute(self.lim[0]-self.lim[1])
             opt = self.lim[0] + (int_length*(4/5))
@@ -375,7 +382,11 @@ class measure:
                 # Add cutpoints to array
                 self.cutpoints.append(cp)
             except FileNotFoundError:
-                print(f"\nNo .csv file found for {fne}\n", flush=True)
+                self.progress_update(
+                    'status', 0, 0,
+                    msg=f"\nNo .csv file found for {fne}\n",
+                    )
+                
             
         # Check if we have an audio interface (running actual test)
         if not self.audio_interface:
@@ -496,7 +507,11 @@ class measure:
         # Only print assumed device volume if scaling is enabled
         if self.scaling:
             # Print assumed device volume for confirmation
-            print(f"\nAssuming device volume of {self.dev_volume} dB\n", flush=True)
+            self.progress_update(
+                "status", 0, 0,
+                msg=f"\nAssuming device volume of {self.dev_volume} dB\n",
+                )
+            
         
         # Turn on LED
         self.ri.led(1, True)
@@ -532,7 +547,10 @@ class measure:
                         
                     # TODO Check for convergence
                     if(done):
-                        print("Checked for convergence", flush=True)
+                        self.progress_update(
+                            'status', 0, 0,
+                            msg="Checked for convergence",
+                            )
                         
                 #------------------------[Skip Repeats]-------------------------
                 
@@ -550,9 +568,12 @@ class measure:
                             
                         # Check if value was found
                         if not np.isnan(idx):
+                            self.progress_update(
+                                'status', 0, 0,
+                                msg=f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
+                                     " skipping to next iteration...\n",
+                                )
 
-                            print(f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
-                                 " skipping to next iteration...\n", flush=True)
                             # Copy old values
                             eval_vals[k] = eval_vals[idx]
                             eval_dat[k] = eval_dat[idx]
@@ -565,8 +586,8 @@ class measure:
                 
                 # Check if we are scaling or using device volume
                 if self.scaling:
-                    # Print message with volume level
-                    print(f"\nScaling volume to {volume[k]} dB\n", flush=True)
+                    
+                    
                     
                     # Add volume to dictionary
                     csv_data['Volume'] = volume[k]
@@ -603,7 +624,12 @@ class measure:
                 #----------------------[Measurement Loop]-----------------------
 
                 for kk in range(self.ptt_rep):
-                    
+                    self.progress_update(
+                        'diagnose',
+                        current_trial=kk,
+                        num_trials=self.ptt_rep,
+                        msg=f"Scaling volume to {volume[k]} dB"
+                        )
                     #---------------------[Get Trial Timestamp]---------------------
                     
                     csv_data['Timestamp'] = datetime.datetime.now().strftime("%d-%b-%Y %H:%M:%S")
@@ -662,20 +688,20 @@ class measure:
                         f.write(
                             dat_format.format(**csv_data)
                         )
+                        
+                    #------------------[Delete Audio File if needed]-----------------
+                    if not self.save_audio:
+                        os.remove(audioname)
                     
                 # Compute mean of FSF values                                          
                 eval_vals[k] = np.mean(eval_dat[k])
                 
-                # Print mean
-                print(f"\nEval method returned {eval_vals[k]}\n", flush=True)
                 
             # Calculate optimal volume
             if not self.volumes:
                 opt = self.get_opt()
             else:
                 opt = np.nan
-            
-            print(f"\n\nOptimal volume = {opt} dB\n\n", flush=True)
             
             # -------------------------[Cleanup]----------------------------
 
