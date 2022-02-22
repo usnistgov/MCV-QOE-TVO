@@ -18,7 +18,7 @@ import plotly.express as px
 
 import mcvqoe.math
 
-
+from itertools import cycle
 # Main class for evaluating
 class evaluate():
     """
@@ -175,7 +175,9 @@ class evaluate():
         
     
     def plot(self, talkers=None, x=None,
+             color_palette=px.colors.qualitative.Plotly,
              title='Scatter plot of intelligibility scores'):
+        
         df = self.data
         
         # Filter by talkers if given
@@ -191,15 +193,21 @@ class evaluate():
 
         fig = px.scatter(df, x=x, y='FSF',
                          color='Filename',
-                          title=title,
+                         title=title,
+                         color_discrete_sequence=color_palette,
                           )
         if x == 'Volume':
+            palette = cycle(color_palette)
+            for _ in set(df['Filename']):
+                avg_color = next(palette)
+            avg_color = next(palette)
             # Plot average volumes
             vol_means = df.groupby('Volume', as_index=False)['FSF'].mean()
             fig.add_trace(
                 go.Scatter(x=vol_means['Volume'],
                            y=vol_means['FSF'],
                            name='Average FSF',
+                           line={'color': avg_color},
                            )
                 )
             
@@ -232,6 +240,7 @@ class evaluate():
                         mode='lines',
                         line=dict(color='black', width=3, dash=ddash),
                         name=key,
+                        
                         )
                     )
 
