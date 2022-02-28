@@ -21,35 +21,26 @@ See the following:
 
 **Additional details and information can be found in the paper linked above.**
 
-## Software Requirements
-- MATLAB R2019a or newer with the following toolboxes:
-	- Audio Toolbox 
-	- Signal Processing Toolbox
-- R version 3.5.X or newer
-    - RStudio (recommended)
-	- ggpubr, dplyr, ggplot2, broom, tinytex packages 
+
 
 # Running TVO 
-The software is divided into subfolders for the type of test that is being performed. The main directory contains code needed to run a TVO. For additional setup information please refer to doccumentation in the paper. 
 
-To run the TVO, run the volume_adjust.m script. Speech will be played and recorded using the connected audio device. The data is stored in a subfolder named *OutDir/data/*. 
+## Installing Software
+To install the software run
+```
+pip install mcvqoe-tvo
+```
 
-volume_adjust.m takes in a variety of optional input paramaters. Default input may be used. Advanced users may be interested in specifying some input paraters. Parameters that may be customized include:
-- AudioFile: audio file to be used for performing tests.
-- Trials: Number of trials to run for each sample volume.
-- Volumes: Instead of using the algorithm to determine what volume levels to sample, explicitly set the volume sample points. When this is given no optimal volume is calculated.
-- Lim: Sets the volume limits to use for the test in dB. 
-- PTTGap: Time to pause after completing one trial and starting the next. This setting may need to change if one is using a SUT with broadband. 
-- tol: Tolerance value used to set minimum spacing between evaluated volume levels.
+Alternatively, one could clone this repository and run the following from the root of the git repository:
+```
+pip install .
+```
 
-## Example input specifications:
-- volume_adjust
-- volume_adjust('AudioFile', 'Filepath\My_Test.wav', 'Trials', 80, 'Lim', [-30,-10],'tol',2)
- 
-There are additional scripts in the main directory. These are used to run the main componenents of the TVO. The folder *private* contains additional helper functions to run this measurement.
+## Running a measurement
+The easiest way to use the measurement system is to run the GUI (https://github.com/usnistgov/mcvqoe).
 
 # Audio Files
-Audio files can be found in the *clips* folder. By default, all four of these audio files are used. The csv files with cutpoints, as well as the test wav files, are included. 
+Audio files can be found in the `mcvqoe/tvo/audio_clips` folder. By default, all four of these audio files are used. The csv files with cutpoints, as well as the test wav files, are included. 
 
 
 # TECHNICAL SUPPORT
