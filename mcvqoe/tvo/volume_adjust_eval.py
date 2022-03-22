@@ -176,7 +176,7 @@ class evaluate():
     
     def plot(self, talkers=None, x=None,
              color_palette=px.colors.qualitative.Plotly,
-             title='Scatter plot of intelligibility scores'):
+             title='Scatter plot of FSF scores'):
         
         df = self.data
         
