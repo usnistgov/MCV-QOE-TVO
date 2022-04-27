@@ -44,14 +44,13 @@ Audio files can be found in the `mcvqoe/tvo/audio_clips` folder. By default, all
 
 
 # TECHNICAL SUPPORT
-For more information or assistance on optimal transmit volume measurements please contact:
+For more information or assistance on access delay measurements please contact:
 
-Chelsea Greene\
 Public Safety Communications Research Division\
 National Institute of Standards and Technology\
 325 Broadway\
 Boulder, CO 80305\
-303-497-6852; Chelsea.Greene@nist.gov or PSCR@PSCR.gov
+PSCR@PSCR.gov
 
 # Disclaimer
 **Much of the included software was developed by NIST employees, for that software the following disclaimer applies:**
