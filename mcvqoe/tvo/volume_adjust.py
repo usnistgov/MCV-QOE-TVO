@@ -422,6 +422,9 @@ class measure:
         
         # Set test name
         self.info['test'] = 'Volume Adjust'
+        # Save blocksize and buffersize for log output
+        self.blocksize = self.audio_interface.blocksize
+        self.buffersize = self.audio_interface.buffersize
         # Fill in standard stuff
         self.info.update(mcvqoe.base.write_log.fill_log(self))
 
