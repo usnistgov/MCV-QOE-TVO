@@ -19,6 +19,8 @@ import plotly.express as px
 import mcvqoe.math
 
 from itertools import cycle
+
+
 # Main class for evaluating
 class evaluate():
     """
@@ -96,9 +98,7 @@ class evaluate():
     
             full_path = dat_file
     
-            self.optimal, self.data = evaluate.load_data(full_path)
-        
-        
+            self.optimal, self.data = evaluate.load_data(full_path)    
 
     @staticmethod    
     def load_data(filepath):
@@ -130,11 +130,42 @@ class evaluate():
         data['name'] = name
         
         return optimum, data
+    
+    @staticmethod
+    def opt_data(filepath):
+        """
+        Load optimum and interval TVO data from filepath and return it in a
+        NumPy array
+        
+        Parameters
+        ----------
+        filepath : str
+            Path to TVO data
+            
+        Returns
+        -------
+        optimum_intervals : NumPy array
+            Optimum, Lower Interval, and Upper Interval from TVO csv file.
+        """
+        
+        # Get data in pandas form
+        opt_dat, _ = evaluate.load_data(filepath)
+        
+        # Get names of pandas indexes
+        ind_names = opt_dat.keys()
+        
+        # Build numpy array from DataFrame
+        optimum_intervals = np.array([opt_dat.at[0, ind_names[0]],
+                                      opt_dat.at[0, ind_names[1]],
+                                      opt_dat.at[0, ind_names[2]]])
+        
+        return optimum_intervals
         
     @staticmethod
     def load_json_data(json_data):
         if isinstance(json_data, str):
             json_data = json.loads(json_data)
+            
         # Extract data, cps, and test_info from json_data
         data = pd.read_json(json_data['measurement'])
         optimum = pd.read_json(json_data['optimal'])
@@ -173,7 +204,6 @@ class evaluate():
         
         return final_json
         
-    
     def plot(self, talkers=None, x=None,
              color_palette=px.colors.qualitative.Plotly,
              title='Scatter plot of FSF scores'):
