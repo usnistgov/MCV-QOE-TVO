@@ -387,7 +387,6 @@ class measure:
                     msg=f"\nNo .csv file found for {fne}\n",
                     )
                 
-            
         # Check if we have an audio interface (running actual test)
         if not self.audio_interface:
             # Create a named tuple to hold sample rate
@@ -590,8 +589,6 @@ class measure:
                 # Check if we are scaling or using device volume
                 if self.scaling:
                     
-                    
-                    
                     # Add volume to dictionary
                     csv_data['Volume'] = volume[k]
                     
@@ -725,11 +722,15 @@ class measure:
         finally:
             if self.get_post_notes:
                 # Get notes
-                info = self.get_post_notes()
+                info = {}
+                info.update(self.get_post_notes())
+                info["opt"] = opt
+                info["lowint"] = self.lim[0]
+                info["upint"] = self.lim[1]
             else:
                 info = {}
             
-            mcvqoe.base.write_log.post(outdir=self.outdir, info=info)
+            self.post(info=info, outdir=self.outdir)
             
     @staticmethod
     def included_audio_path():
@@ -748,3 +749,39 @@ class measure:
             )
         
         return audio_path
+
+    def post(self, info={}, outdir=""):
+        """
+        Take in a QoE measurement class info dictionary to write post-test to tests.log.
+    
+        ...
+    
+        Parameters
+        ----------
+        info : dict
+            The <measurement>.info dictionary.
+        outdir : str
+            The directory to write to.
+        """
+    
+        # Add 'outdir' to tests.log path
+        log_datadir = os.path.join(outdir, "tests.log")
+    
+        with open(log_datadir, "a") as file:
+            if "Error Notes" in info:
+                notes = info["Error Notes"]
+                header = "===Test-Error Notes==="
+            else:
+                header = "===Post-Test Notes==="
+                notes = info.get("Post Test Notes", "")
+    
+            # Write header
+            file.write(header + "\n")
+            # Write notes
+            file.write("".join(["\t" + line + "\n" for line in notes.splitlines(keepends=False)]))
+            # Write results
+            file.write("===TVO Results===" + "\n")
+            file.write("\t" + f"Optimum [dB]: {info['opt']}, Lower Interval [dB]: {info['lowint']}, " +
+                       f"Upper Interval [dB]: {info['upint']}" + "\n")
+            # Write end
+            file.write("===End Test===\n\n")
