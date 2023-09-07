@@ -8,15 +8,11 @@ Created on Wed Dec 15 15:53:47 2021
 import argparse
 import json
 import os
-import re
-import warnings
 
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 import plotly.express as px
-
-import mcvqoe.math
 
 from itertools import cycle
 
@@ -118,6 +114,7 @@ class evaluate():
         data : pd.DataFrame
             Data frame containing volumes and FSF scores from TVO measurement.
         """
+        
         # Load optimum settings
         optimum = pd.read_csv(filepath, nrows=1)
         
@@ -185,8 +182,7 @@ class evaluate():
 
         Returns
         -------
-        None.
-
+        None
         """
         
         test_info = {self.test_name: None}

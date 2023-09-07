@@ -141,12 +141,11 @@ class measure:
         fmt : string
             format string for data lines for the .csv file
         """
-        hdr=','.join(self.data_fields.keys())+'\n'
-        fmt='{'+'},{'.join(self.data_fields.keys())+'}\n'
+        hdr = ','.join(self.data_fields.keys())+'\n'
+        fmt = '{'+'},{'.join(self.data_fields.keys())+'}\n'
         
         return (hdr, fmt)
 
-    
     def setup_grid(self):
         """Populate array of x-values to evaluate at"""
         
@@ -420,7 +419,7 @@ class measure:
         #----------------------[Fill Log Entries]-----------------------
         
         # Set test name
-        self.info['test'] = 'Volume Adjust'
+        self.info['test'] = 'Volume_Adjust'
         # Save blocksize and buffersize for log output
         self.blocksize = self.audio_interface.blocksize
         self.buffersize = self.audio_interface.buffersize
@@ -429,20 +428,27 @@ class measure:
 
         #--------------[Initialize Folders and Filenames]---------------
         
+        # Generate Folder/file naming convention
+        fold_file_name = f"{dtn}_{self.info['test']}"
+        
         # Generate data dir names
-        data_dir = os.path.join(self.outdir, 'data')
-        wav_data_dir = os.path.join(data_dir, 'wav')
-        csv_data_dir = os.path.join(data_dir, 'csv')
+        # data_dir = os.path.join(self.outdir, 'data')
+        # wav_data_dir = os.path.join(data_dir, 'wav')
+        # csv_data_dir = os.path.join(data_dir, 'csv')
+        self.data_dir = os.path.join(self.outdir, fold_file_name)
+        os.makedirs(self.data_dir, exist_ok=True)
         
         # Create data directories
-        os.makedirs(wav_data_dir, exist_ok=True)
-        os.makedirs(csv_data_dir, exist_ok=True)
+        # os.makedirs(wav_data_dir, exist_ok=True)
+        # os.makedirs(csv_data_dir, exist_ok=True)
         
         # Generate base filename to use for all files
-        base_filename = f"capture_{self.info['Test Type']}_{dtn}"
+        # base_filename = f"capture_{self.info['Test Type']}_{dtn}"
+        base_filename = fold_file_name
         
         # Generate and create test dir names
-        wavdir = os.path.join(wav_data_dir, base_filename)
+        # wavdir = os.path.join(wav_data_dir, base_filename)
+        wavdir = os.path.join(self.data_dir, "wav")
         os.makedirs(wavdir, exist_ok=True)
         
         # Get names of audio clips without path or extension
@@ -451,14 +457,14 @@ class measure:
         # Generate csv filenames and add path
         file = f"{base_filename}.csv"
         tmp_f = f"{base_filename}_TEMP.csv"
-        file = os.path.join(csv_data_dir, file)
-        tmp_f = os.path.join(csv_data_dir, tmp_f)
+        file = os.path.join(self.data_dir, file)
+        tmp_f = os.path.join(self.data_dir, tmp_f)
         self.data_filename = file
         temp_data_filename = tmp_f
             
         # Generate filename for bad csv data
         bad_name = f"{base_filename}_BAD.csv"
-        bad_name = os.path.join(csv_data_dir, bad_name)
+        bad_name = os.path.join(self.data_dir, bad_name)
         
         #--------------------[Generate CSV Header]----------------------
         
@@ -484,7 +490,7 @@ class measure:
             
         #-----------------------[write log entry]-----------------------
         
-        mcvqoe.base.pre(info=self.info, outdir=self.outdir)
+        mcvqoe.base.pre(info=self.info, outdir=self.outdir, test_folder=self.data_dir)
         
         #-----------------[Create Arrays & Variables]-------------------
         
@@ -690,6 +696,7 @@ class measure:
                         )
                         
                     #------------------[Delete Audio File if needed]-----------------
+                    
                     if not self.save_audio:
                         os.remove(audioname)
                     
@@ -730,7 +737,7 @@ class measure:
             else:
                 info = {}
             
-            self.post(info=info, outdir=self.outdir)
+            self.post(info=info, outdir=self.outdir, test_folder=self.data_dir)
             
     @staticmethod
     def included_audio_path():
@@ -750,10 +757,10 @@ class measure:
         
         return audio_path
 
-    def post(self, info={}, outdir=""):
+    def post(self, info={}, outdir="", test_folder=""):
         """
         Take in a QoE measurement class info dictionary to write post-test to tests.log.
-    
+        Specific to TVO
         ...
     
         Parameters
@@ -785,3 +792,28 @@ class measure:
                        f"Upper Interval [dB]: {info['upint']}" + "\n")
             # Write end
             file.write("===End Test===\n\n")
+            
+        # If test_folder is given, write to single test log
+        if test_folder != "":
+            
+            # Add "test_folder" to tests.log path
+            log_datadir = os.path.join(test_folder, "tests.log")
+            
+            with open(log_datadir, "a") as file:
+                if "Error Notes" in info:
+                    notes = info["Error Notes"]
+                    header = "===Test-Error Notes==="
+                else:
+                    header = "===Post-Test Notes==="
+                    notes = info.get("Post Test Notes", "")
+        
+                # Write header
+                file.write(header + "\n")
+                # Write notes
+                file.write("".join(["\t" + line + "\n" for line in notes.splitlines(keepends=False)]))
+                # Write results
+                file.write("===TVO Results===" + "\n")
+                file.write("\t" + f"Optimum [dB]: {info['opt']}, Lower Interval [dB]: {info['lowint']}, " +
+                           f"Upper Interval [dB]: {info['upint']}" + "\n")
+                # Write end
+                file.write("===End Test===\n\n")
