@@ -419,7 +419,7 @@ class measure:
         #----------------------[Fill Log Entries]-----------------------
         
         # Set test name
-        self.info['test'] = 'Volume_Adjust'
+        self.info['test'] = 'VolumeAdjust'
         # Save blocksize and buffersize for log output
         self.blocksize = self.audio_interface.blocksize
         self.buffersize = self.audio_interface.buffersize
