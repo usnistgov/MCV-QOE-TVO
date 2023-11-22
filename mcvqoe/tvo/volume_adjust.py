@@ -102,6 +102,7 @@ class measure:
         self.dev_volume = 0.0
         self.get_post_notes = None
         self.info = {'Test Type': 'default', 'Pre Test Notes': ''}
+        self.iterations = 1
         self.lim = [-40.0, 0.0]
         self.no_log = ('test', 'ri')
         self.outdir = ""
@@ -117,6 +118,10 @@ class measure:
         self.tol = 1.0
         self.ptt_rep = 40
         self.volumes = []
+        # Variables for multiple iterations
+        self.data_dirs = []
+        self.opt_save = []
+        self.lim_save = []
         
         for k, v in kwargs.items():
             if hasattr(self, k):
@@ -124,6 +129,21 @@ class measure:
             else:
                 raise TypeError(f"{k} is not a valid keyword argument")
     
+    def param_check(self):
+        """
+        Check that parameters are correct.
+
+        Raises
+        ------
+        ValueError
+            If there is an incorrect parameter.
+        """
+
+        if self.iterations < 1:
+            raise ValueError(
+                f"Can't have less than 1 iteration of a test. {self.iterations} iterations chosen."
+            )
+            
     def csv_header_fmt(self):
         """
         generate header and format for .csv files.
@@ -404,340 +424,352 @@ class measure:
         #              'fs', 'opt', 'vol_scl_en', 'clipi', 'cutpoints',
         #              'method')
         
-        #--------------[Check for Correct Audio Channels]---------------
+        #--------[Save original self.lim for multiple iterations]-------
         
-        if('tx_voice' not in self.audio_interface.playback_chans.keys()):
-            raise ValueError('self.audio_interface must be set up to play tx_voice') 
-        if('rx_voice' not in self.audio_interface.rec_chans.keys()):
-            raise ValueError('self.audio_interface must be set up to record rx_voice')
-
-        #---------------------[Get Test Start Time]---------------------
-
-        self.info['Tstart'] = datetime.datetime.now()
-        dtn = self.info['Tstart'].strftime('%d-%b-%Y_%H-%M-%S')
-
-        #----------------------[Fill Log Entries]-----------------------
+        self.lim_orig = self.lim
         
-        # Set test name
-        self.info['test'] = 'VolumeAdjust'
-        # Save blocksize and buffersize for log output
-        self.blocksize = self.audio_interface.blocksize
-        self.buffersize = self.audio_interface.buffersize
-        # Fill in standard stuff
-        self.info.update(mcvqoe.base.write_log.fill_log(self))
-
-        #--------------[Initialize Folders and Filenames]---------------
-        
-        # Generate Folder/file naming convention
-        fold_file_name = f"{dtn}_{self.info['test']}"
-        
-        # Generate data dir names
-        # data_dir = os.path.join(self.outdir, 'data')
-        # wav_data_dir = os.path.join(data_dir, 'wav')
-        # csv_data_dir = os.path.join(data_dir, 'csv')
-        self.data_dir = os.path.join(self.outdir, fold_file_name)
-        os.makedirs(self.data_dir, exist_ok=True)
-        
-        # Create data directories
-        # os.makedirs(wav_data_dir, exist_ok=True)
-        # os.makedirs(csv_data_dir, exist_ok=True)
-        
-        # Generate base filename to use for all files
-        # base_filename = f"capture_{self.info['Test Type']}_{dtn}"
-        base_filename = fold_file_name
-        
-        # Generate and create test dir names
-        # wavdir = os.path.join(wav_data_dir, base_filename)
-        wavdir = os.path.join(self.data_dir, "wav")
-        os.makedirs(wavdir, exist_ok=True)
-        
-        # Get names of audio clips without path or extension
-        clip_names = [os.path.basename(os.path.splitext(a)[0]) for a in self.audio_files]
-        
-        # Generate csv filenames and add path
-        file = f"{base_filename}.csv"
-        tmp_f = f"{base_filename}_TEMP.csv"
-        file = os.path.join(self.data_dir, file)
-        tmp_f = os.path.join(self.data_dir, tmp_f)
-        self.data_filename = file
-        temp_data_filename = tmp_f
-            
-        # Generate filename for bad csv data
-        bad_name = f"{base_filename}_BAD.csv"
-        bad_name = os.path.join(self.data_dir, bad_name)
-        
-        #--------------------[Generate CSV Header]----------------------
-        
-        header, dat_format = self.csv_header_fmt()
-        
-        #-----------------[Load Audio Files if Needed]------------------
-        
-        if not hasattr(self, "y"):
-            self.load_audio()
-        
-        #-------------------[Add Tx Audio to WAV Dir]-------------------
-        
-        if self.save_tx_audio and self.save_audio:
-            # Write out Tx clips to files
-            for dat, name in zip(self.y, clip_names):
-                out_name = os.path.join(wavdir, f"Tx_{name}")
-                mcvqoe.base.audio_write(out_name + ".wav", int(self.audio_interface.sample_rate), dat)
-        
-        #-------------------[Get Max Number of Loops]-------------------
-        
-        if self.volumes:
-            self.smax = len(self.volumes)
-            
-        #-----------------------[write log entry]-----------------------
-        
-        mcvqoe.base.pre(info=self.info, outdir=self.outdir, test_folder=self.data_dir)
-        
-        #-----------------[Create Arrays & Variables]-------------------
-        
-        # Arrays
-        volume = []
-        eval_vals = [0.0 for i in range(self.smax)]
-        eval_dat = [[0.0 for j in range(self.ptt_rep)] for i in range(self.smax)]
-        
-        # Used to cycle between audiofiles
-        clipi = np.mod(range(self.ptt_rep), len(self.y))
-        
-        # Variables
-        opt = np.nan
-        trial_count = 0
-        
-        # Setup for Optimization Method
-        if self.volumes:
-            volume = self.volumes
-
-        #--------------------[Notify User of Start]---------------------
-
-        # Only print assumed device volume if scaling is enabled
-        if self.scaling:
-            # Print assumed device volume for confirmation
-            self.progress_update(
-                "status", 0, 0,
-                msg=f"\nAssuming device volume of {self.dev_volume} dB\n",
-                )
-            
-        
-        # Turn on LED
-        self.ri.led(1, True)
+        #--------------[Multiple iterations loop and try]---------------
         
         try:
             
-            #----------------------[Write CSV Header]-----------------------
-            
-            with open(temp_data_filename, "wt") as f:
-                f.write(header)
-            
-            #--------------------[Volume Selection Loop]--------------------
-            
-            for k in range(self.smax):
+            for itr in range(self.iterations):
                 
-                #------------------[Initialize CSV Dictionary]------------------
+                # Get back original limits
+                self.lim = self.lim_orig
+        
+                #--------------[Check for Correct Audio Channels]---------------
+                
+                if('tx_voice' not in self.audio_interface.playback_chans.keys()):
+                    raise ValueError('self.audio_interface must be set up to play tx_voice') 
+                if('rx_voice' not in self.audio_interface.rec_chans.keys()):
+                    raise ValueError('self.audio_interface must be set up to record rx_voice')
+        
+                #---------------------[Get Test Start Time]---------------------
+        
+                self.info['Tstart'] = datetime.datetime.now()
+                dtn = self.info['Tstart'].strftime('%d-%b-%Y_%H-%M-%S')
+        
+                #----------------------[Fill Log Entries]-----------------------
+                
+                # Set test name
+                self.info['test'] = 'VolumeAdjust'
+                # Add iteration number
+                self.info['iteration #'] = f"{itr+1} of {self.iterations}"
+                # Save blocksize and buffersize for log output
+                self.blocksize = self.audio_interface.blocksize
+                self.buffersize = self.audio_interface.buffersize
+                # Fill in standard stuff
+                self.info.update(mcvqoe.base.write_log.fill_log(self))
+        
+                #--------------[Initialize Folders and Filenames]---------------
+                
+                # Generate Folder/file naming convention
+                fold_file_name = f"{dtn}_{self.info['test']}"
+                
+                # Generate data dir names
+                # data_dir = os.path.join(self.outdir, 'data')
+                # wav_data_dir = os.path.join(data_dir, 'wav')
+                # csv_data_dir = os.path.join(data_dir, 'csv')
+                self.data_dirs.append(os.path.join(self.outdir, fold_file_name))
+                os.makedirs(self.data_dirs[itr], exist_ok=True)
+                
+                # Create data directories
+                # os.makedirs(wav_data_dir, exist_ok=True)
+                # os.makedirs(csv_data_dir, exist_ok=True)
+                
+                # Generate base filename to use for all files
+                # base_filename = f"capture_{self.info['Test Type']}_{dtn}"
+                base_filename = fold_file_name
+                
+                # Generate and create test dir names
+                # wavdir = os.path.join(wav_data_dir, base_filename)
+                wavdir = os.path.join(self.data_dirs[itr], "wav")
+                os.makedirs(wavdir, exist_ok=True)
+                
+                # Get names of audio clips without path or extension
+                clip_names = [os.path.basename(os.path.splitext(a)[0]) for a in self.audio_files]
+                
+                # Generate csv filenames and add path
+                file = f"{base_filename}.csv"
+                tmp_f = f"{base_filename}_TEMP.csv"
+                file = os.path.join(self.data_dirs[itr], file)
+                tmp_f = os.path.join(self.data_dirs[itr], tmp_f)
+                self.data_filename = file
+                temp_data_filename = tmp_f
                     
-                csv_data = {}
+                # Generate filename for bad csv data
+                bad_name = f"{base_filename}_BAD.csv"
+                bad_name = os.path.join(self.data_dirs[itr], bad_name)
                 
-                #------------------[Compute Next Sample Point]------------------
+                #--------------------[Generate CSV Header]----------------------
                 
-                # Check if volumes were given
-                if not self.volumes:
-                    if k == 0:
-                        # Initial run initialization
-                        volume.append(self.opt_vol_pnt(new_eval=True))
-                        # Can't be done before we start
-                        done = False
-                    else:
-                        # Process data and get next point
-                        new_vol, done = self.get_next(volume[k-1], eval_dat[k-1])
-                        volume.append(new_vol)
-                        
-                    # TODO Check for convergence
-                    if(done):
-                        self.progress_update(
-                            'status', 0, 0,
-                            msg="Checked for convergence",
-                            )
-                        
-                #------------------------[Skip Repeats]-------------------------
+                header, dat_format = self.csv_header_fmt()
                 
-                # Check if volumes were given
-                if not self.volumes:
-                    # Check to see if we are evaluating a value that has been done before
-                    # abs = [(np.absolute(volume[k] - vol) == (self.tol/1000)) for vol in volume[0:k]]
-                    abs = [(np.absolute(volume[k] - vol) < self.tol) for vol in volume[0:k]]
-                    if len(abs) > 0:
+                #-----------------[Load Audio Files if Needed]------------------
+                
+                if not hasattr(self, "y"):
+                    self.load_audio()
+                
+                #-------------------[Add Tx Audio to WAV Dir]-------------------
+                
+                if self.save_tx_audio and self.save_audio:
+                    # Write out Tx clips to files
+                    for dat, name in zip(self.y, clip_names):
+                        out_name = os.path.join(wavdir, f"Tx_{name}")
+                        mcvqoe.base.audio_write(out_name + ".wav", int(self.audio_interface.sample_rate), dat)
+                
+                #-------------------[Get Max Number of Loops]-------------------
+                
+                if self.volumes:
+                    self.smax = len(self.volumes)
+                    
+                #-----------------------[write log entry]-----------------------
+                
+                mcvqoe.base.pre(info=self.info, outdir=self.outdir, test_folder=self.data_dirs[itr])
+                
+                #-----------------[Create Arrays & Variables]-------------------
+                
+                # Arrays
+                volume = []
+                eval_vals = [0.0 for i in range(self.smax)]
+                eval_dat = [[0.0 for j in range(self.ptt_rep)] for i in range(self.smax)]
+                
+                # Used to cycle between audiofiles
+                clipi = np.mod(range(self.ptt_rep), len(self.y))
+                
+                # Variables
+                opt = np.nan
+                trial_count = 0
+                
+                # Setup for Optimization Method
+                if self.volumes:
+                    volume = self.volumes
+        
+                #--------------------[Notify User of Start]---------------------
+        
+                # Only print assumed device volume if scaling is enabled
+                if self.scaling:
+                    # Print assumed device volume for confirmation
+                    self.progress_update(
+                        "status", 0, 0,
+                        msg=f"\nAssuming device volume of {self.dev_volume} dB\n",
+                        )
+                    
+                
+                # Turn on LED
+                self.ri.led(1, True)
+                    
+                #----------------------[Write CSV Header]-----------------------
+                
+                with open(temp_data_filename, "wt") as f:
+                    f.write(header)
+                
+                #--------------------[Volume Selection Loop]--------------------
+                
+                for k in range(self.smax):
+                    
+                    #------------------[Initialize CSV Dictionary]------------------
                         
-                        try:
-                            idx = next(x[0] for x in enumerate(abs) if x[1] == True)
-                        except StopIteration:
-                            idx = np.nan
+                    csv_data = {}
+                    
+                    #------------------[Compute Next Sample Point]------------------
+                    
+                    # Check if volumes were given
+                    if not self.volumes:
+                        if k == 0:
+                            # Initial run initialization
+                            volume.append(self.opt_vol_pnt(new_eval=True))
+                            # Can't be done before we start
+                            done = False
+                        else:
+                            # Process data and get next point
+                            new_vol, done = self.get_next(volume[k-1], eval_dat[k-1])
+                            volume.append(new_vol)
                             
-                        # Check if value was found
-                        if not np.isnan(idx):
+                        # TODO Check for convergence
+                        if(done):
                             self.progress_update(
                                 'status', 0, 0,
-                                msg=f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
-                                     " skipping to next iteration...\n",
+                                msg="Checked for convergence",
                                 )
-
-                            # Copy old values
-                            eval_vals[k] = eval_vals[idx]
-                            eval_dat[k] = eval_dat[idx]
-                            # Skip to next iteration
-                            continue
+                            
+                    #------------------------[Skip Repeats]-------------------------
                     
-                #------------------------[Change Volume]------------------------
-                # Volume is changed by scaling the waveform or prompting the user
-                # to change it in the audio device configuration
-                
-                # Check if we are scaling or using device volume
-                if self.scaling:
-                    
-                    # Add volume to dictionary
-                    csv_data['Volume'] = volume[k]
-                    
-                    # Scale audio to volume level
-                    y_scl = []
-                    for jj in range(len(self.y)):
-                        y_scl.append((10**((volume[k]-self.dev_volume)/20)) * self.y[jj])
-                
-                else:
-                    
-                    # Turn on other LED because we are waiting
-                    self.ri.led(2, True)
-                    
-                    # Get volume to set device to
-                    d_volume = np.around(volume[k])
-                    
-                    # Add volume to dictionary
-                    csv_data['Volume'] = d_volume
-                    
-                    # TODO: prompt user to set new volume
-                    
-                    # TODO: Check if value was given
-                    
-                    # Scale audio volume to make up the difference
-                    # Scale audio to volume level
-                    y_scl = []
-                    for jj in range(len(self.y)):
-                        y_scl.append(((10**(volume[k]-d_volume)/20)) * self.y[jj])
-                    
-                    # Turn off other LED
-                    self.ri.led(2, False)
-                    
-                #----------------------[Measurement Loop]-----------------------
-
-                for kk in range(self.ptt_rep):
-                    self.progress_update(
-                        'diagnose',
-                        current_trial=kk,
-                        num_trials=self.ptt_rep,
-                        msg=f"Scaling volume to {volume[k]} dB"
-                        )
-                    #---------------------[Get Trial Timestamp]---------------------
-                    
-                    csv_data['Timestamp'] = datetime.datetime.now().strftime("%d-%b-%Y %H:%M:%S")
-                    
-                    #------------------[Key Radio and Play Audio]-------------------
-                    
-                    # Push the PTT button
-                    self.ri.ptt(True)
-                
-                    # Pause to let the radio key up
-                    time.sleep(self.ptt_wait)
-                    
-                    # Create audiofile name/path for recording
-                    audioname = f"Rx{(k*self.ptt_rep)+(kk+1)}_{self.audio_files[clipi[kk]]}"
-                    audioname = os.path.join(wavdir, audioname)
-                    
-                    # Play and record audio data
-                    rec_name = self.audio_interface.play_record(y_scl[clipi[kk]], audioname)
-                    
-                    # Release the PTT button
-                    self.ri.ptt(False)
-                    
-                    # Pause between runs
-                    time.sleep(self.ptt_gap)
-                    
-                    # Increment trial count
-                    trial_count = trial_count + 1
-                    
-                    #------------------[Check if Pause is Needed]-------------------
-                    
-                    # TODO do we need this?
-                    
-                    #----------------[Volume Level Data Processing]-----------------
-                
-                    # Load audio for processing
-                    _, rec_dat = mcvqoe.base.audio_read(audioname)
-                    rec_dat = mcvqoe.base.audio_float(rec_dat)
-                
-                    # Call fsf method
-                    eval_dat[k][kk], dly = mcvqoe.base.fsf(self.y[clipi[kk]], rec_dat)
-                    
-                    #-----------------------[Calculate M2E]-------------------------
-                    
-                    csv_data['m2e_latency'] = np.true_divide(dly, self.audio_interface.sample_rate)
-                                               
-                    #------------------------[Write to CSV]-------------------------
-                    
-                    # Place info inside Dictionary
-                    suffix_removed = self.audio_files[clipi[kk]].removesuffix('.wav')
-                    csv_data['Filename'] = suffix_removed
-                    csv_data['Channels'] = mcvqoe.base.audio_channels_to_string(rec_name)
-                    csv_data['FSF'] = eval_dat[k][kk]
-                    
-                    # Write to CSV
-                    with open(temp_data_filename, "at") as f:
-                        f.write(
-                            dat_format.format(**csv_data)
-                        )
+                    # Check if volumes were given
+                    if not self.volumes:
+                        # Check to see if we are evaluating a value that has been done before
+                        # abs = [(np.absolute(volume[k] - vol) == (self.tol/1000)) for vol in volume[0:k]]
+                        abs = [(np.absolute(volume[k] - vol) < self.tol) for vol in volume[0:k]]
+                        if len(abs) > 0:
+                            
+                            try:
+                                idx = next(x[0] for x in enumerate(abs) if x[1] == True)
+                            except StopIteration:
+                                idx = np.nan
+                                
+                            # Check if value was found
+                            if not np.isnan(idx):
+                                self.progress_update(
+                                    'status', 0, 0,
+                                    msg=f"\nRepeating volume of {volume[k]}, using volume from run {idx+1},"+
+                                         " skipping to next iteration...\n",
+                                    )
+    
+                                # Copy old values
+                                eval_vals[k] = eval_vals[idx]
+                                eval_dat[k] = eval_dat[idx]
+                                # Skip to next iteration
+                                continue
                         
-                    #------------------[Delete Audio File if needed]-----------------
+                    #------------------------[Change Volume]------------------------
+                    # Volume is changed by scaling the waveform or prompting the user
+                    # to change it in the audio device configuration
                     
-                    if not self.save_audio:
-                        os.remove(audioname)
+                    # Check if we are scaling or using device volume
+                    if self.scaling:
+                        
+                        # Add volume to dictionary
+                        csv_data['Volume'] = volume[k]
+                        
+                        # Scale audio to volume level
+                        y_scl = []
+                        for jj in range(len(self.y)):
+                            y_scl.append((10**((volume[k]-self.dev_volume)/20)) * self.y[jj])
                     
-                # Compute mean of FSF values                                          
-                eval_vals[k] = np.mean(eval_dat[k])
-                
-                
-            # Calculate optimal volume
-            if not self.volumes:
-                opt = self.get_opt()
-            else:
-                opt = np.nan
-            
-            # -------------------------[Cleanup]----------------------------
+                    else:
+                        
+                        # Turn on other LED because we are waiting
+                        self.ri.led(2, True)
+                        
+                        # Get volume to set device to
+                        d_volume = np.around(volume[k])
+                        
+                        # Add volume to dictionary
+                        csv_data['Volume'] = d_volume
 
-            # Copy temp file to final file and add optimal findings
-            with open(self.data_filename, "w") as f:
-                writer = csv.writer(f, lineterminator='\n')
-                writer.writerow(['Optimum [dB]', 'Lower_Interval [dB]', 'Upper_Interval [dB]'])
-                writer.writerow([opt, self.lim[0], self.lim[1]])
-                for row in csv.reader(open(temp_data_filename, 'r')):
-                    writer.writerow(row)
-            
-            # Delete our temporary csv file
-            os.remove(temp_data_filename)
-            
-            # Turn off RI LED
-            self.ri.led(1, False)
-      
+                        # Scale audio volume to make up the difference
+                        # Scale audio to volume level
+                        y_scl = []
+                        for jj in range(len(self.y)):
+                            y_scl.append(((10**(volume[k]-d_volume)/20)) * self.y[jj])
+                        
+                        # Turn off other LED
+                        self.ri.led(2, False)
+                        
+                    #----------------------[Measurement Loop]-----------------------
+    
+                    for kk in range(self.ptt_rep):
+                        self.progress_update(
+                            'diagnose',
+                            current_trial=kk,
+                            num_trials=self.ptt_rep,
+                            msg=f"Scaling volume to {volume[k]} dB"
+                            )
+                        #---------------------[Get Trial Timestamp]---------------------
+                        
+                        csv_data['Timestamp'] = datetime.datetime.now().strftime("%d-%b-%Y %H:%M:%S")
+                        
+                        #------------------[Key Radio and Play Audio]-------------------
+                        
+                        # Push the PTT button
+                        self.ri.ptt(True)
+                    
+                        # Pause to let the radio key up
+                        time.sleep(self.ptt_wait)
+                        
+                        # Create audiofile name/path for recording
+                        audioname = f"Rx{(k*self.ptt_rep)+(kk+1)}_{self.audio_files[clipi[kk]]}"
+                        audioname = os.path.join(wavdir, audioname)
+                        
+                        # Play and record audio data
+                        rec_name = self.audio_interface.play_record(y_scl[clipi[kk]], audioname)
+                        
+                        # Release the PTT button
+                        self.ri.ptt(False)
+                        
+                        # Pause between runs
+                        time.sleep(self.ptt_gap)
+                        
+                        # Increment trial count
+                        trial_count = trial_count + 1
+                        
+                        #----------------[Volume Level Data Processing]-----------------
+                    
+                        # Load audio for processing
+                        _, rec_dat = mcvqoe.base.audio_read(audioname)
+                        rec_dat = mcvqoe.base.audio_float(rec_dat)
+                    
+                        # Call fsf method
+                        eval_dat[k][kk], dly = mcvqoe.base.fsf(self.y[clipi[kk]], rec_dat)
+                        
+                        #-----------------------[Calculate M2E]-------------------------
+                        
+                        csv_data['m2e_latency'] = np.true_divide(dly, self.audio_interface.sample_rate)
+                                                   
+                        #------------------------[Write to CSV]-------------------------
+                        
+                        # Place info inside Dictionary
+                        suffix_removed = self.audio_files[clipi[kk]].removesuffix('.wav')
+                        csv_data['Filename'] = suffix_removed
+                        csv_data['Channels'] = mcvqoe.base.audio_channels_to_string(rec_name)
+                        csv_data['FSF'] = eval_dat[k][kk]
+                        
+                        # Write to CSV
+                        with open(temp_data_filename, "at") as f:
+                            f.write(
+                                dat_format.format(**csv_data)
+                            )
+                            
+                        #------------------[Delete Audio File if needed]-----------------
+                        
+                        if not self.save_audio:
+                            os.remove(audioname)
+                        
+                    # Compute mean of FSF values                                          
+                    eval_vals[k] = np.mean(eval_dat[k])
+                    
+                    
+                # Calculate optimal volume
+                if not self.volumes:
+                    opt = self.get_opt()
+                else:
+                    opt = np.nan
+                
+                # -------------------------[Cleanup]----------------------------
+    
+                # Copy temp file to final file and add optimal findings
+                with open(self.data_filename, "w") as f:
+                    writer = csv.writer(f, lineterminator='\n')
+                    writer.writerow(['Optimum [dB]', 'Lower_Interval [dB]', 'Upper_Interval [dB]'])
+                    writer.writerow([opt, self.lim[0], self.lim[1]])
+                    for row in csv.reader(open(temp_data_filename, 'r')):
+                        writer.writerow(row)
+                
+                # Delete our temporary csv file
+                os.remove(temp_data_filename)
+                
+                # Turn off RI LED
+                self.ri.led(1, False)
+                
+                # Save opt and lim for multiple iterations
+                self.opt_save.append(opt)
+                self.lim_save.append(self.lim)
+  
         finally:
             if self.get_post_notes:
                 # Get notes
                 info = {}
                 info.update(self.get_post_notes())
-                info["opt"] = opt
-                info["lowint"] = self.lim[0]
-                info["upint"] = self.lim[1]
+                for itrr in range(len(self.lim_save)):
+                    
+                    info["opt"] = self.opt_save[itrr]
+                    info["lowint"] = self.lim_save[itrr][0]
+                    info["upint"] = self.lim_save[itrr][1]
+                    self.post(info=info, outdir=self.outdir, test_folder=self.data_dirs[itrr])
             else:
                 info = {}
-            
-            self.post(info=info, outdir=self.outdir, test_folder=self.data_dir)
+                for itrr in range(len(self.data_dirs)):
+                    self.post(info=info, outdir=self.outdir, test_folder=self.data_dirs[itrr])
             
     @staticmethod
     def included_audio_path():
